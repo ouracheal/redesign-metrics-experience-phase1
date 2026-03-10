@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metrics – Summary</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #fff;
+      color: #1a1a2e;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-size: 13px;
+    }
+
+    /* ── Top nav ── */
+    .topnav {
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0 20px;
+      height: 46px;
+      flex-shrink: 0;
+      background: #fff;
+      gap: 0;
+    }
+    .topnav-logo {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 600; color: #111827;
+      margin-right: 24px; white-space: nowrap;
+    }
+    .topnav-logo svg { color: #7c3aed; }
+    .nav-tabs { display: flex; align-items: center; gap: 0; flex: 1; }
+    .nav-tab {
+      padding: 0 14px; height: 46px;
+      display: flex; align-items: center;
+      font-size: 13px; color: #6b7280;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -1px; white-space: nowrap;
+      transition: color 0.15s;
+      text-decoration: none;
+      position: relative;
+    }
+    .nav-tab:hover { color: #374151; }
+    .nav-tab.active { color: #111827; border-bottom-color: #7c3aed; font-weight: 500; }
+    .nav-tab .preview-badge {
+      position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+      font-size: 9px; font-weight: 700; color: #7c3aed; letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .nav-tab.has-preview { padding-top: 14px; }
+
+    .topnav-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+    .btn-configure {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border: 1px solid #d1d5db; border-radius: 5px;
+      background: #fff; font-size: 12.5px; color: #374151; cursor: pointer;
+      transition: background 0.15s; white-space: nowrap;
+    }
+    .btn-configure:hover { background: #f9fafb; }
+    .time-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 5px;
+      background: #fff; font-size: 12.5px; color: #374151; cursor: pointer;
+      white-space: nowrap;
+    }
+    .time-btn .time-label { font-weight: 600; color: #111827; }
+    .time-note { font-size: 10px; color: #9ca3af; text-align: right; line-height: 1.2; }
+
+    /* ── AI bar ── */
+    .ai-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 20px;
+      background: #faf9ff;
+      border-bottom: 1px solid rgba(124,58,237,0.14);
+      flex-shrink: 0;
+    }
+    .ai-bar-icon { color: #7c3aed; flex-shrink: 0; }
+    .ai-bar-input-wrap {
+      flex: 1; display: flex; align-items: center;
+      background: #fff;
+      border: 1.5px solid rgba(124,58,237,0.22);
+      border-radius: 8px;
+      padding: 5px 12px; gap: 8px;
+      max-width: 620px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .ai-bar-input-wrap:focus-within {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 2px rgba(124,58,237,0.1);
+    }
+    .ai-bar-input {
+      flex: 1; border: none; outline: none;
+      font-size: 13px; color: #111827; background: transparent;
+    }
+    .ai-bar-input::placeholder { color: #9ca3af; }
+    .ai-bar-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: #7c3aed; color: #fff; border: none;
+      border-radius: 6px; padding: 5px 14px;
+      font-size: 12.5px; font-weight: 600; cursor: pointer;
+      flex-shrink: 0; transition: background 0.15s;
+    }
+    .ai-bar-btn:hover { background: #6d28d9; }
+    .ai-bar-hint { font-size: 11px; color: #9ca3af; white-space: nowrap; }
+
+    /* ── Search bar row ── */
+    .searchbar-row {
+      display: flex;
+      align-items: stretch;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 10px 20px;
+      gap: 10px;
+      flex-shrink: 0;
+      background: #fff;
+    }
+    .search-pill {
+      display: flex; align-items: center;
+      border: 1px solid #d1d5db; border-radius: 5px;
+      overflow: hidden; flex: 1;
+    }
+    .search-pill-tab {
+      padding: 6px 12px;
+      background: #f3f4f6; border-right: 1px solid #d1d5db;
+      font-size: 12.5px; font-weight: 600; color: #374151;
+      white-space: nowrap; cursor: pointer; user-select: none;
+    }
+    .search-pill input {
+      flex: 1; border: none; outline: none;
+      font-size: 13px; color: #111827; padding: 6px 12px;
+      background: transparent;
+    }
+    .search-pill input::placeholder { color: #9ca3af; }
+    .search-pill-icon { padding: 0 10px; color: #9ca3af; }
+
+    /* ── Main layout ── */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 240px; flex-shrink: 0;
+      border-right: 1px solid #e5e7eb;
+      overflow-y: auto;
+      padding: 12px 0;
+      background: #fff;
+    }
+    .filter-group { margin-bottom: 2px; }
+    .filter-group-header {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 14px; cursor: pointer;
+      font-size: 12.5px; font-weight: 600; color: #374151;
+      user-select: none;
+    }
+    .filter-group-header:hover { background: #f9fafb; }
+    .chevron { font-size: 10px; color: #9ca3af; transition: transform 0.15s; }
+    .chevron.open { transform: rotate(0deg); }
+
+    .filter-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 5px 14px 5px 34px; cursor: pointer;
+      transition: background 0.1s;
+    }
+    .filter-item:hover { background: #f9fafb; }
+    .filter-left { display: flex; align-items: center; gap: 8px; }
+    .cb {
+      width: 13px; height: 13px; border: 1.5px solid #7c3aed;
+      border-radius: 2px; background: #7c3aed;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .cb-unchecked { border-color: #d1d5db; background: #fff; }
+    .cb svg { display: block; }
+    .filter-label { font-size: 12.5px; color: #374151; }
+    .filter-count { font-size: 12px; color: #9ca3af; }
+
+    /* ── Content panel ── */
+    .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Controls bar */
+    .controls-bar {
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 16px; border-bottom: 1px solid #e5e7eb;
+      flex-shrink: 0; background: #fff;
+    }
+    .hide-controls-btn {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12.5px; color: #374151; cursor: pointer; border: none; background: none;
+    }
+    .hide-controls-btn:hover { color: #7c3aed; }
+    .controls-divider { width: 1px; height: 16px; background: #e5e7eb; }
+    .showing-text { font-size: 12.5px; color: #374151; }
+    .showing-text strong { color: #111827; }
+    .export-btn {
+      margin-left: auto; padding: 5px 12px; border: 1px solid #d1d5db; border-radius: 5px;
+      background: #fff; font-size: 12.5px; color: #374151; cursor: pointer;
+    }
+    .export-btn:hover { background: #f9fafb; }
+    .grid-btn {
+      padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 5px;
+      background: #fff; cursor: pointer; color: #6b7280;
+    }
+
+    /* AI actions button + dropdown */
+    .ai-actions-wrap { position: relative; }
+    .btn-ai-actions {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 13px; border: 1.5px solid rgba(124,58,237,0.4); border-radius: 5px;
+      background: #fff; font-size: 12.5px; font-weight: 600; color: #7c3aed;
+      cursor: pointer; white-space: nowrap; transition: all 0.15s;
+    }
+    .btn-ai-actions:hover { background: rgba(124,58,237,0.06); border-color: #7c3aed; }
+    .btn-ai-actions svg { flex-shrink: 0; }
+    .ai-dropdown {
+      display: none; position: absolute; top: calc(100% + 6px); right: 0;
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1); min-width: 200px; z-index: 50;
+      overflow: hidden;
+    }
+    .ai-dropdown.open { display: block; }
+    .ai-dropdown-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; cursor: pointer; transition: background 0.1s;
+      font-size: 13px; color: #374151;
+    }
+    .ai-dropdown-item:hover { background: #f9fafb; }
+    .ai-dropdown-item svg { color: #7c3aed; flex-shrink: 0; }
+    .ai-dropdown-label { font-weight: 500; }
+    .ai-dropdown-sub { font-size: 11.5px; color: #9ca3af; }
+
+    /* Dashboard modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 100;
+      align-items: flex-start; justify-content: center;
+      padding: 32px 24px; overflow-y: auto;
+    }
+    .modal-overlay.open { display: flex; }
+    .dash-modal {
+      background: #f5f5f8; border-radius: 14px;
+      width: 100%; max-width: 1040px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.2);
+      animation: modalIn 0.2s ease-out;
+      overflow: hidden;
+    }
+    @keyframes modalIn { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+    .dash-modal-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 24px; background: #fff; border-bottom: 1px solid #e5e7eb;
+    }
+    .dash-modal-title { font-size: 16px; font-weight: 700; color: #111827; }
+    .dash-modal-sub { font-size: 12.5px; color: #9ca3af; margin-top: 1px; }
+    .dash-modal-close {
+      margin-left: auto; color: #9ca3af; cursor: pointer; font-size: 18px;
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+      border-radius: 6px; transition: all 0.15s;
+    }
+    .dash-modal-close:hover { background: #f3f4f6; color: #374151; }
+
+    .dash-ai-banner {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 24px; background: linear-gradient(135deg, rgba(124,58,237,0.05), rgba(167,139,250,0.05));
+      border-bottom: 1px solid rgba(124,58,237,0.12);
+      font-size: 12.5px; color: #374151;
+    }
+    .dash-ai-banner strong { color: #7c3aed; }
+
+    .dash-modal-body { padding: 20px 24px 28px; }
+
+    .dash-grid { display: grid; gap: 14px; }
+    .dash-grid-2 { grid-template-columns: 1fr 1fr; }
+    .dash-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .dash-grid-full { grid-template-columns: 1fr; }
+
+    .widget {
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+      padding: 14px 16px; overflow: hidden;
+    }
+    .widget-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+    .widget-title { font-size: 12.5px; font-weight: 600; color: #374151; line-height: 1.3; }
+    .widget-meta { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+    .widget-val { font-size: 28px; font-weight: 800; color: #111827; letter-spacing: -1px; }
+    .widget-val.up { color: #dc2626; }
+    .widget-val.good { color: #059669; }
+    .widget-change { font-size: 11.5px; margin-top: 3px; }
+    .widget-change.up { color: #dc2626; }
+    .widget-change.good { color: #059669; }
+    .widget-change.neutral { color: #9ca3af; }
+
+    /* Mini SVG sparklines */
+    .sparkline { width: 100%; overflow: visible; display: block; margin-top: 4px; }
+
+    .dash-section-label {
+      font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #9ca3af; margin: 16px 0 8px;
+    }
+    .dash-section-label:first-child { margin-top: 0; }
+
+    .dash-modal-footer {
+      display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+      padding: 14px 24px; background: #fff; border-top: 1px solid #e5e7eb;
+    }
+    .btn-cancel { padding: 7px 16px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; font-size: 13px; color: #374151; cursor: pointer; }
+    .btn-save { padding: 7px 18px; border: none; border-radius: 6px; background: #7c3aed; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; box-shadow: 0 2px 8px rgba(124,58,237,0.3); }
+    .btn-save:hover { background: #6d28d9; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: #111827; color: #fff; border-radius: 10px;
+      padding: 11px 18px; font-size: 13px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      display: flex; align-items: center; gap: 8px;
+      transform: translateY(60px); opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1); z-index: 200;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* NL context banner */
+    .nl-banner {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 16px; background: #faf9ff; border-bottom: 1px solid rgba(124,58,237,0.12);
+      flex-shrink: 0; font-size: 12.5px; color: #374151;
+    }
+    .nl-banner strong { color: #7c3aed; }
+    .nl-banner-dismiss { margin-left: auto; color: #9ca3af; cursor: pointer; font-size: 14px; }
+    .nl-banner-dismiss:hover { color: #374151; }
+
+    /* Table */
+    .table-wrap { flex: 1; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { position: sticky; top: 0; z-index: 2; background: #fff; }
+    thead tr { border-bottom: 1px solid #e5e7eb; }
+    th {
+      padding: 9px 16px; text-align: left;
+      font-size: 11px; font-weight: 600; color: #6b7280;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      white-space: nowrap; cursor: pointer; user-select: none;
+    }
+    th:hover { color: #374151; }
+    th.sorted { color: #374151; }
+    th .sort-icon { margin-left: 4px; }
+
+    td { padding: 9px 16px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+    tr:hover td { background: #fafafa; }
+    tr:last-child td { border-bottom: none; }
+
+    .metric-name {
+      font-size: 13px; color: #111827; cursor: pointer;
+    }
+    .metric-name:hover { color: #7c3aed; }
+
+    .time-ago { font-size: 13px; color: #374151; }
+    .dash { color: #9ca3af; }
+  </style>
+</head>
+<body>
+
+<!-- Top nav -->
+<div class="topnav">
+  <div class="topnav-logo">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Metrics
+  </div>
+  <div class="nav-tabs">
+    <a class="nav-tab" href="index.html">Overview</a>
+    <a class="nav-tab" href="metrics-explorer.html">Explorer</a>
+    <a class="nav-tab active">Summary</a>
+    <a class="nav-tab">Volume</a>
+    <a class="nav-tab has-preview">
+      <span class="preview-badge">Preview</span>
+      Generate Metrics
+    </a>
+  </div>
+  <div class="topnav-right">
+    <div style="text-align:right;">
+      <div class="time-note">UTC-04:00</div>
+    </div>
+    <button class="btn-configure">Configure Metrics ▾</button>
+    <button class="time-btn"><span class="time-label">1h</span></button>
+    <button class="time-btn">Past 1 Hour ▾</button>
+  </div>
+</div>
+
+<!-- AI bar -->
+<div class="ai-bar">
+  <svg class="ai-bar-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+  <div class="ai-bar-input-wrap">
+    <input class="ai-bar-input" id="aiBarInput" type="text" placeholder="Ask anything about your metrics…" />
+  </div>
+  <button class="ai-bar-btn" onclick="aiBarSearch()">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+    Ask AI
+  </button>
+
+</div>
+
+<!-- Search bar row -->
+<div class="searchbar-row">
+  <div class="search-pill" style="max-width:580px;">
+    <span class="search-pill-tab">Metric</span>
+    <span class="search-pill-icon">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </span>
+    <input id="metricSearch" type="text" placeholder="Search metrics" />
+  </div>
+  <div class="search-pill" style="flex:1;">
+    <span class="search-pill-tab">Tag</span>
+    <input type="text" placeholder="Filter by Tag Value" />
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+
+    <div class="filter-group">
+      <div class="filter-group-header">
+        <span class="chevron open">▾</span> Configuration
+      </div>
+      <div class="filter-item"><div class="filter-left"><div class="cb"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div><span class="filter-label">All tags</span></div><span class="filter-count">46.7K</span></div>
+      <div class="filter-item"><div class="filter-left"><div class="cb"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div><span class="filter-label">Configured tags</span></div><span class="filter-count">17.5K</span></div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-group-header">
+        <span class="chevron open">▾</span> Percentiles
+      </div>
+      <div class="filter-item"><div class="filter-left"><div class="cb"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div><span class="filter-label">Enabled percentiles</span></div><span class="filter-count">10.3K</span></div>
+      <div class="filter-item"><div class="filter-left"><div class="cb"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div><span class="filter-label">Disabled percentiles</span></div><span class="filter-count">6.98K</span></div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-group-header">
+        <span class="chevron open">▾</span> Historical Metrics
+      </div>
+      <div class="filter-item"><div class="filter-left"><div class="cb"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div><span class="filter-label">Enabled historical metrics</span></div><span class="filter-count">153</span></div>
+      <div class="filter-item"><div class="filter-left"><div class="cb"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div><span class="filter-label">Disabled historical metrics</span></div><span class="filter-count">146K</span></div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-group-header">
+        <span class="chevron open">▾</span> Query Activity
+      </div>
+      <div class="filter-item"><div class="filter-left"><div class="cb"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div><span class="filter-label">Queried in 30 days</span></div><span class="filter-count">48.3K</span></div>
+      <div class="filter-item"><div class="filter-left"><div class="cb"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div><span class="filter-label">Not queried in 30 days</span></div><span class="filter-count">88.4K</span></div>
+      <div class="filter-item"><div class="filter-left"><div class="cb"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div><span class="filter-label">Not queried in 60 days</span></div><span class="filter-count">76.6K</span></div>
+      <div class="filter-item"><div class="filter-left"><div class="cb"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div><span class="filter-label">Not queried in 90 days</span></div><span class="filter-count">68.8K</span></div>
+      <div class="filter-item"><div class="filter-left"><div class="cb"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div><span class="filter-label">Not queried in 120 days</span></div><span class="filter-count">63.7K</span></div>
+      <div class="filter-item"><div class="filter-left"><div class="cb"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div><span class="filter-label">Not queried in 150 days</span></div><span class="filter-count">59.5K</span></div>
+      <div class="filter-item"><div class="filter-left"><div class="cb"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div><span class="filter-label">Not queried in 180 days</span></div><span class="filter-count">53.1K</span></div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-group-header">
+        <span class="chevron open">▾</span> Related Assets
+      </div>
+      <div class="filter-item"><div class="filter-left"><div class="cb"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div><span class="filter-label">Used in assets (dashb…</span></div><span class="filter-count">41.4K</span></div>
+      <div class="filter-item"><div class="filter-left"><div class="cb"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div><span class="filter-label">Not used in any asset</span></div><span class="filter-count">104K</span></div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-group-header">
+        <span class="chevron open">▾</span> Metric Type
+      </div>
+      <div class="filter-item"><div class="filter-left"><div class="cb"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg></div><span class="filter-label">Distributions</span></div><span class="filter-count">17.3K</span></div>
+      <div class="filter-item"><div class="filter-left"><div class="cb cb-unchecked"></div><span class="filter-label">Gauge</span></div><span class="filter-count">82.1K</span></div>
+      <div class="filter-item"><div class="filter-left"><div class="cb cb-unchecked"></div><span class="filter-label">Count</span></div><span class="filter-count">34.2K</span></div>
+      <div class="filter-item"><div class="filter-left"><div class="cb cb-unchecked"></div><span class="filter-label">Rate</span></div><span class="filter-count">12.1K</span></div>
+    </div>
+
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- NL context banner -->
+    <div class="nl-banner" id="nlBanner">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="color:#7c3aed;flex-shrink:0"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+      Showing metrics related to <strong id="nlQuery">platform health metrics</strong>
+      <span class="nl-banner-dismiss" onclick="document.getElementById('nlBanner').style.display='none'">✕</span>
+    </div>
+
+    <!-- Controls bar -->
+    <div class="controls-bar">
+      <button class="hide-controls-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+        Hide Controls
+      </button>
+      <div class="controls-divider"></div>
+      <span class="showing-text">Showing <strong>1–50</strong> of <strong id="totalCount">127</strong> metrics</span>
+      <button class="export-btn">Export as CSV</button>
+      <button class="grid-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      </button>
+      <div class="ai-actions-wrap">
+        <button class="btn-ai-actions" onclick="toggleAiDropdown()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+          AI actions ▾
+        </button>
+        <div class="ai-dropdown" id="aiDropdown">
+          <div class="ai-dropdown-item" onclick="openDashboard()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <div>
+              <div class="ai-dropdown-label">Create dashboard</div>
+              <div class="ai-dropdown-sub">Generate from these metrics</div>
+            </div>
+          </div>
+          <div style="height:1px;background:#f3f4f6;margin:2px 0;"></div>
+          <div class="ai-dropdown-item" onclick="openOptimization()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <div>
+              <div class="ai-dropdown-label">Metric optimization planning</div>
+              <div class="ai-dropdown-sub">Analyze usage, simulate cost impact</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="sorted">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              METRIC NAME
+            </th>
+            <th>FIRST SUBMITTED</th>
+            <th>LAST CONFIGURED</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard modal -->
+<div class="modal-overlay" id="dashModal">
+  <div class="dash-modal">
+    <div class="dash-modal-header">
+      <div>
+        <div class="dash-modal-title">Platform Health Overview</div>
+        <div class="dash-modal-sub">Generated from 50 metrics · platform health · env:prod</div>
+      </div>
+      <div class="dash-modal-close" onclick="closeDashboard()">✕</div>
+    </div>
+
+    <div class="dash-ai-banner">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="color:#7c3aed;flex-shrink:0"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+      <strong>Bits AI</strong> selected the most signal-rich metrics and grouped them into 4 sections — Infrastructure Health, HTTP & Availability, Kubernetes, and SLO & Error Budget.
+    </div>
+
+    <div class="dash-modal-body">
+
+      <!-- Infrastructure Health -->
+      <div class="dash-section-label">Infrastructure Health</div>
+      <div class="dash-grid dash-grid-3" style="margin-bottom:14px;">
+        <div class="widget">
+          <div class="widget-header">
+            <div><div class="widget-title">CPU Usage</div><div class="widget-meta">system.cpu.usage · avg · env:prod</div></div>
+          </div>
+          <div class="widget-val up">78.4%</div>
+          <div class="widget-change up">↑ +23% vs 1h ago</div>
+          <svg class="sparkline" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="sg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ef4444" stop-opacity="0.15"/><stop offset="100%" stop-color="#ef4444" stop-opacity="0"/></linearGradient></defs>
+            <path d="M0,32 L20,28 L40,25 L60,22 L80,20 L100,18 L120,14 L140,10 L160,6 L180,4 L200,3" fill="none" stroke="#ef4444" stroke-width="1.5"/>
+            <path d="M0,32 L20,28 L40,25 L60,22 L80,20 L100,18 L120,14 L140,10 L160,6 L180,4 L200,3 L200,40 L0,40Z" fill="url(#sg1)"/>
+          </svg>
+        </div>
+        <div class="widget">
+          <div class="widget-header">
+            <div><div class="widget-title">Memory Used</div><div class="widget-meta">system.mem.used · avg · env:prod</div></div>
+          </div>
+          <div class="widget-val">62.1%</div>
+          <div class="widget-change neutral">→ stable vs 1h ago</div>
+          <svg class="sparkline" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="sg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7c3aed" stop-opacity="0.15"/><stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/></linearGradient></defs>
+            <path d="M0,20 L20,19 L40,21 L60,20 L80,18 L100,20 L120,21 L140,19 L160,20 L180,21 L200,20" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+            <path d="M0,20 L20,19 L40,21 L60,20 L80,18 L100,20 L120,21 L140,19 L160,20 L180,21 L200,20 L200,40 L0,40Z" fill="url(#sg2)"/>
+          </svg>
+        </div>
+        <div class="widget">
+          <div class="widget-header">
+            <div><div class="widget-title">Disk In Use</div><div class="widget-meta">system.disk.in_use · avg · env:prod</div></div>
+          </div>
+          <div class="widget-val good">41.3%</div>
+          <div class="widget-change good">↓ -2% vs 1h ago</div>
+          <svg class="sparkline" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="sg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#059669" stop-opacity="0.15"/><stop offset="100%" stop-color="#059669" stop-opacity="0"/></linearGradient></defs>
+            <path d="M0,24 L40,22 L80,22 L120,23 L160,22 L200,22" fill="none" stroke="#059669" stroke-width="1.5"/>
+            <path d="M0,24 L40,22 L80,22 L120,23 L160,22 L200,22 L200,40 L0,40Z" fill="url(#sg3)"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- System load full-width chart -->
+      <div class="dash-grid dash-grid-full" style="margin-bottom:14px;">
+        <div class="widget">
+          <div class="widget-header">
+            <div><div class="widget-title">System Load (1m / 5m / 15m)</div><div class="widget-meta">system.load.1, system.load.5, system.load.15 · past 1h · env:prod</div></div>
+          </div>
+          <svg viewBox="0 0 680 80" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;margin-top:6px;">
+            <line x1="0" y1="20" x2="680" y2="20" stroke="#f3f4f6" stroke-width="1"/>
+            <line x1="0" y1="40" x2="680" y2="40" stroke="#f3f4f6" stroke-width="1"/>
+            <line x1="0" y1="60" x2="680" y2="60" stroke="#f3f4f6" stroke-width="1"/>
+            <text x="2" y="18" font-size="9" fill="#9ca3af">4.0</text>
+            <text x="2" y="38" font-size="9" fill="#9ca3af">2.0</text>
+            <text x="2" y="58" font-size="9" fill="#9ca3af">1.0</text>
+            <!-- load.1 -->
+            <path d="M20,55 L80,50 L140,42 L200,38 L260,30 L320,18 L380,14 L440,25 L500,35 L560,45 L640,50 L680,52" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+            <!-- load.5 -->
+            <path d="M20,58 L80,55 L140,50 L200,46 L260,40 L320,34 L380,28 L440,36 L500,42 L560,50 L640,54 L680,56" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4,2"/>
+            <!-- load.15 -->
+            <path d="M20,60 L80,58 L140,56 L200,53 L260,50 L320,45 L380,42 L440,46 L500,50 L560,55 L640,57 L680,58" fill="none" stroke="#ddd6fe" stroke-width="1.5" stroke-dasharray="2,3"/>
+            <!-- Legend -->
+            <rect x="560" y="4" width="8" height="8" rx="2" fill="#7c3aed"/>
+            <text x="571" y="12" font-size="10" fill="#374151">load.1</text>
+            <rect x="600" y="4" width="8" height="8" rx="2" fill="#a78bfa"/>
+            <text x="611" y="12" font-size="10" fill="#374151">load.5</text>
+            <rect x="640" y="4" width="8" height="8" rx="2" fill="#ddd6fe"/>
+            <text x="651" y="12" font-size="10" fill="#374151">load.15</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- HTTP & Availability -->
+      <div class="dash-section-label">HTTP & Availability</div>
+      <div class="dash-grid dash-grid-2" style="margin-bottom:14px;">
+        <div class="widget">
+          <div class="widget-header">
+            <div><div class="widget-title">HTTP Error Rate (5xx)</div><div class="widget-meta">http.status_code.5xx · sum · env:prod</div></div>
+          </div>
+          <div class="widget-val up">1.8%</div>
+          <div class="widget-change up">↑ +0.4% vs 1h ago</div>
+          <svg class="sparkline" viewBox="0 0 300 50" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="sg4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ef4444" stop-opacity="0.12"/><stop offset="100%" stop-color="#ef4444" stop-opacity="0"/></linearGradient></defs>
+            <path d="M0,38 L40,35 L80,34 L120,32 L160,28 L200,22 L240,20 L280,16 L300,14" fill="none" stroke="#ef4444" stroke-width="1.5"/>
+            <path d="M0,38 L40,35 L80,34 L120,32 L160,28 L200,22 L240,20 L280,16 L300,14 L300,50 L0,50Z" fill="url(#sg4)"/>
+          </svg>
+        </div>
+        <div class="widget">
+          <div class="widget-header">
+            <div><div class="widget-title">HTTP Request Latency p99</div><div class="widget-meta">http.request.duration.p99 · avg · env:prod</div></div>
+          </div>
+          <div class="widget-val">284ms</div>
+          <div class="widget-change neutral">→ within SLO</div>
+          <svg class="sparkline" viewBox="0 0 300 50" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="sg5" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10b981" stop-opacity="0.12"/><stop offset="100%" stop-color="#10b981" stop-opacity="0"/></linearGradient></defs>
+            <path d="M0,28 L40,26 L80,30 L120,25 L160,27 L200,24 L240,26 L280,25 L300,26" fill="none" stroke="#10b981" stroke-width="1.5"/>
+            <path d="M0,28 L40,26 L80,30 L120,25 L160,27 L200,24 L240,26 L280,25 L300,26 L300,50 L0,50Z" fill="url(#sg5)"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Kubernetes & SLO -->
+      <div class="dash-grid dash-grid-2" style="margin-bottom:0;">
+        <div class="widget">
+          <div class="widget-header">
+            <div><div class="widget-title">Kubernetes Pods Running</div><div class="widget-meta">kubernetes.pods.running · sum · env:prod</div></div>
+          </div>
+          <div class="widget-val good">142</div>
+          <div class="widget-change good">↑ +4 vs 1h ago</div>
+          <svg class="sparkline" viewBox="0 0 300 40" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,22 L60,20 L120,18 L180,16 L240,14 L300,12" fill="none" stroke="#059669" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="widget">
+          <div class="widget-header">
+            <div><div class="widget-title">SLO Compliance</div><div class="widget-meta">platform.slo.compliance · avg · env:prod</div></div>
+          </div>
+          <div class="widget-val good">99.6%</div>
+          <div class="widget-change good">✓ Above 99.5% target</div>
+          <svg class="sparkline" viewBox="0 0 300 40" xmlns="http://www.w3.org/2000/svg">
+            <line x1="0" y1="15" x2="300" y2="15" stroke="#fde68a" stroke-width="1" stroke-dasharray="4,3"/>
+            <path d="M0,14 L60,13 L120,14 L180,12 L240,13 L300,13" fill="none" stroke="#059669" stroke-width="1.5"/>
+            <text x="2" y="14" font-size="8" fill="#9ca3af">99.5% SLO</text>
+          </svg>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="dash-modal-footer">
+      <button class="btn-cancel" onclick="closeDashboard()">Cancel</button>
+      <button class="btn-save" onclick="saveDashboard()">Save dashboard →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"><span>✅</span><span id="toastMsg">Saved!</span></div>
+
+<script>
+  // ── AI Bar ──
+  function aiBarSearch() {
+    const q = document.getElementById('aiBarInput').value.trim();
+    if (!q) return;
+    const ql = q.toLowerCase();
+    if (/\b(last \d+|broken down|by (service|env|region|host|az)|p99|p95|avg|sum|rate|over time|spike|usage in prod|cpu|latency|error rate|throughput)\b/.test(ql)) {
+      window.location.href = 'metrics-explorer.html?q=' + encodeURIComponent(q);
+      return;
+    }
+    if (/\b(unused|spike|cost|optim|quota|expensive|governance|cardinality|budget)\b/.test(ql)) {
+      window.location.href = 'governance.html?q=' + encodeURIComponent(q);
+      return;
+    }
+    window.location.href = 'metric-summary.html?q=' + encodeURIComponent(q);
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    const aiInput = document.getElementById('aiBarInput');
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('q')) aiInput.value = params.get('q');
+    aiInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') aiBarSearch(); });
+  });
+
+  const PLATFORM_HEALTH_METRICS = [
+    { name: 'system.cpu.user',                   first: '2 months ago',  last: '2 months ago' },
+    { name: 'system.cpu.system',                 first: '2 months ago',  last: '—' },
+    { name: 'system.cpu.usage',                  first: '2 months ago',  last: '2 months ago' },
+    { name: 'system.cpu.iowait',                 first: '3 months ago',  last: '—' },
+    { name: 'system.cpu.idle',                   first: '2 months ago',  last: '—' },
+    { name: 'system.load.1',                     first: '2 months ago',  last: '3 months ago' },
+    { name: 'system.load.5',                     first: '2 months ago',  last: '—' },
+    { name: 'system.load.15',                    first: '2 months ago',  last: '—' },
+    { name: 'system.mem.used',                   first: '2 months ago',  last: '2 months ago' },
+    { name: 'system.mem.free',                   first: '2 months ago',  last: '—' },
+    { name: 'system.mem.total',                  first: '2 months ago',  last: '2 months ago' },
+    { name: 'system.mem.pct_usable',             first: '2 months ago',  last: '—' },
+    { name: 'system.swap.used',                  first: '3 months ago',  last: '—' },
+    { name: 'system.swap.free',                  first: '3 months ago',  last: '—' },
+    { name: 'system.disk.in_use',                first: '2 months ago',  last: '2 months ago' },
+    { name: 'system.disk.read_time_pct',         first: '3 months ago',  last: '—' },
+    { name: 'system.disk.write_time_pct',        first: '3 months ago',  last: '—' },
+    { name: 'system.net.bytes_sent',             first: '2 months ago',  last: '—' },
+    { name: 'system.net.bytes_rcvd',             first: '2 months ago',  last: '—' },
+    { name: 'system.net.packets_in.error',       first: '4 months ago',  last: '—' },
+    { name: 'system.net.packets_out.error',      first: '4 months ago',  last: '—' },
+    { name: 'http.server.requests',              first: '2 months ago',  last: '2 months ago' },
+    { name: 'http.server.errors',                first: '2 months ago',  last: '2 months ago' },
+    { name: 'http.server.latency',               first: '2 months ago',  last: '1 month ago' },
+    { name: 'http.request.duration.p50',         first: '3 months ago',  last: '—' },
+    { name: 'http.request.duration.p95',         first: '3 months ago',  last: '3 months ago' },
+    { name: 'http.request.duration.p99',         first: '3 months ago',  last: '2 months ago' },
+    { name: 'http.status_code.4xx',              first: '2 months ago',  last: '—' },
+    { name: 'http.status_code.5xx',              first: '2 months ago',  last: '2 months ago' },
+    { name: 'uptime.check.status',              first: '6 months ago',  last: '5 months ago' },
+    { name: 'platform.health.score',             first: '1 month ago',   last: '1 month ago' },
+    { name: 'platform.health.degraded_services', first: '1 month ago',   last: '—' },
+    { name: 'platform.error_budget.remaining',   first: '2 months ago',  last: '2 months ago' },
+    { name: 'platform.slo.compliance',           first: '2 months ago',  last: '1 month ago' },
+    { name: 'kubernetes.cpu.usage.total',        first: '2 months ago',  last: '2 months ago' },
+    { name: 'kubernetes.cpu.limits',             first: '2 months ago',  last: '—' },
+    { name: 'kubernetes.memory.usage',           first: '2 months ago',  last: '2 months ago' },
+    { name: 'kubernetes.memory.limits',          first: '2 months ago',  last: '—' },
+    { name: 'kubernetes.pods.running',           first: '2 months ago',  last: '1 month ago' },
+    { name: 'kubernetes.pods.failed',            first: '2 months ago',  last: '—' },
+    { name: 'kubernetes.pods.pending',           first: '3 months ago',  last: '—' },
+    { name: 'kubernetes.node.status',            first: '2 months ago',  last: '2 months ago' },
+    { name: 'kubernetes.replicaset.replicas_desired',  first: '3 months ago', last: '—' },
+    { name: 'kubernetes.replicaset.replicas_ready',    first: '3 months ago', last: '3 months ago' },
+    { name: 'kubernetes.deployment.replicas_available', first: '2 months ago', last: '2 months ago' },
+    { name: 'kubernetes.deployment.replicas_unavailable', first: '2 months ago', last: '—' },
+    { name: 'nginx.net.connections',             first: '4 months ago',  last: '3 months ago' },
+    { name: 'nginx.requests',                    first: '4 months ago',  last: '4 months ago' },
+    { name: 'nginx.upstream.response_time',      first: '4 months ago',  last: '—' },
+    { name: 'postgres.connections',              first: '3 months ago',  last: '3 months ago' },
+  ];
+
+  const CHECKOUT_CONVERSION_METRICS = [
+    { name: 'checkout.conversion_rate',                   first: '5 months ago',  last: '1 month ago' },
+    { name: 'checkout.funnel.step_completion_rate',       first: '5 months ago',  last: '1 month ago' },
+    { name: 'checkout.cart.abandonment_rate',             first: '5 months ago',  last: '2 months ago' },
+    { name: 'checkout.cart.add_to_cart_rate',             first: '5 months ago',  last: '—' },
+    { name: 'checkout.order.completion_rate',             first: '5 months ago',  last: '1 month ago' },
+    { name: 'checkout.order.value.avg',                   first: '5 months ago',  last: '2 months ago' },
+    { name: 'checkout.order.count',                       first: '5 months ago',  last: '1 month ago' },
+    { name: 'checkout.payment.success_rate',              first: '5 months ago',  last: '1 month ago' },
+    { name: 'checkout.payment.failure_rate',              first: '5 months ago',  last: '2 months ago' },
+    { name: 'checkout.payment.retry_rate',                first: '4 months ago',  last: '—' },
+    { name: 'checkout.funnel.address_completion_rate',    first: '4 months ago',  last: '3 months ago' },
+    { name: 'checkout.funnel.payment_entry_rate',         first: '4 months ago',  last: '3 months ago' },
+    { name: 'checkout.funnel.review_to_place_order_rate', first: '4 months ago',  last: '2 months ago' },
+    { name: 'checkout.session.duration.avg',              first: '5 months ago',  last: '—' },
+    { name: 'checkout.session.duration.p95',              first: '5 months ago',  last: '3 months ago' },
+    { name: 'checkout.guest_checkout.rate',               first: '4 months ago',  last: '—' },
+    { name: 'checkout.coupon.usage_rate',                 first: '3 months ago',  last: '2 months ago' },
+    { name: 'checkout.coupon.discount_amount.avg',        first: '3 months ago',  last: '—' },
+    { name: 'checkout.revenue.per_session',               first: '5 months ago',  last: '1 month ago' },
+    { name: 'checkout.revenue.total',                     first: '5 months ago',  last: '1 month ago' },
+    { name: 'checkout.upsell.acceptance_rate',            first: '3 months ago',  last: '—' },
+    { name: 'checkout.shipping.selection_rate.standard',  first: '4 months ago',  last: '—' },
+    { name: 'checkout.shipping.selection_rate.express',   first: '4 months ago',  last: '3 months ago' },
+    { name: 'checkout.errors.payment_declined_rate',      first: '5 months ago',  last: '2 months ago' },
+    { name: 'checkout.errors.address_validation_rate',    first: '4 months ago',  last: '—' },
+  ];
+
+  const PAYMENTS_METRICS = [
+    { name: 'payments.transaction.count',            first: '6 months ago', last: '1 month ago' },
+    { name: 'payments.transaction.success_rate',     first: '6 months ago', last: '1 month ago' },
+    { name: 'payments.transaction.failure_rate',     first: '6 months ago', last: '2 months ago' },
+    { name: 'payments.transaction.volume',           first: '6 months ago', last: '1 month ago' },
+    { name: 'payments.transaction.amount.avg',       first: '6 months ago', last: '2 months ago' },
+    { name: 'payments.transaction.amount.p99',       first: '5 months ago', last: '—' },
+    { name: 'payments.latency.p50',                  first: '6 months ago', last: '1 month ago' },
+    { name: 'payments.latency.p95',                  first: '6 months ago', last: '1 month ago' },
+    { name: 'payments.latency.p99',                  first: '6 months ago', last: '2 months ago' },
+    { name: 'payments.authorization.rate',           first: '5 months ago', last: '1 month ago' },
+    { name: 'payments.authorization.decline_rate',   first: '5 months ago', last: '2 months ago' },
+    { name: 'payments.authorization.latency',        first: '5 months ago', last: '—' },
+    { name: 'payments.capture.success_rate',         first: '5 months ago', last: '1 month ago' },
+    { name: 'payments.capture.failure_rate',         first: '5 months ago', last: '—' },
+    { name: 'payments.refund.count',                 first: '5 months ago', last: '3 months ago' },
+    { name: 'payments.refund.rate',                  first: '5 months ago', last: '2 months ago' },
+    { name: 'payments.chargeback.count',             first: '6 months ago', last: '3 months ago' },
+    { name: 'payments.chargeback.rate',              first: '6 months ago', last: '2 months ago' },
+    { name: 'payments.fraud.detection_rate',         first: '4 months ago', last: '1 month ago' },
+    { name: 'payments.fraud.block_rate',             first: '4 months ago', last: '2 months ago' },
+    { name: 'payments.queue.depth',                  first: '6 months ago', last: '1 month ago' },
+    { name: 'payments.queue.latency',                first: '6 months ago', last: '1 month ago' },
+    { name: 'payments.queue.dlq_count',              first: '5 months ago', last: '—' },
+    { name: 'payments.gateway.response_time',        first: '6 months ago', last: '2 months ago' },
+    { name: 'payments.gateway.timeout_rate',         first: '5 months ago', last: '—' },
+    { name: 'payments.gateway.error_rate',           first: '5 months ago', last: '2 months ago' },
+    { name: 'payments.provider.stripe.success_rate', first: '4 months ago', last: '1 month ago' },
+    { name: 'payments.provider.stripe.latency',      first: '4 months ago', last: '—' },
+    { name: 'payments.provider.paypal.success_rate', first: '4 months ago', last: '3 months ago' },
+    { name: 'payments.provider.paypal.latency',      first: '4 months ago', last: '—' },
+    { name: 'payments.retry.count',                  first: '5 months ago', last: '—' },
+    { name: 'payments.retry.success_rate',           first: '5 months ago', last: '3 months ago' },
+    { name: 'payments.idempotency.collision_rate',   first: '3 months ago', last: '—' },
+    { name: 'payments.webhook.delivery_rate',        first: '4 months ago', last: '2 months ago' },
+    { name: 'payments.webhook.failure_rate',         first: '4 months ago', last: '—' },
+    { name: 'payments.api.request_count',            first: '6 months ago', last: '1 month ago' },
+    { name: 'payments.api.error_rate',               first: '6 months ago', last: '1 month ago' },
+    { name: 'payments.api.latency.p99',              first: '6 months ago', last: '2 months ago' },
+    { name: 'payments.db.query_duration.avg',        first: '5 months ago', last: '2 months ago' },
+    { name: 'payments.db.connection_pool.active',    first: '5 months ago', last: '—' },
+    { name: 'payments.db.deadlock.count',            first: '4 months ago', last: '—' },
+    { name: 'payments.cache.hit_rate',               first: '4 months ago', last: '3 months ago' },
+    { name: 'payments.cache.miss_rate',              first: '4 months ago', last: '—' },
+    { name: 'payments.settlement.delay.avg',         first: '5 months ago', last: '2 months ago' },
+    { name: 'payments.settlement.failure_rate',      first: '5 months ago', last: '—' },
+    { name: 'payments.reconciliation.error_count',   first: '3 months ago', last: '3 months ago' },
+    { name: 'payments.compliance.pci.check_failures',first: '3 months ago', last: '—' },
+    { name: 'payments.cpu.usage',                    first: '6 months ago', last: '1 month ago' },
+    { name: 'payments.memory.used',                  first: '6 months ago', last: '—' },
+    { name: 'payments.pod.restart_count',            first: '5 months ago', last: '2 months ago' },
+  ];
+
+  function pickDataset(q) {
+    if (!q) return PLATFORM_HEALTH_METRICS;
+    const ql = q.toLowerCase();
+    if (/checkout|conversion|cart|funnel/.test(ql)) return CHECKOUT_CONVERSION_METRICS;
+    if (/payment|payments service|payments team/.test(ql)) return PAYMENTS_METRICS;
+    return PLATFORM_HEALTH_METRICS;
+  }
+
+  function render(metrics) {
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+    document.getElementById('totalCount').textContent = metrics.length;
+    metrics.forEach(m => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="metric-name" onclick="window.location.href='metrics-explorer.html?q=${encodeURIComponent(m.name)}'">${m.name}</span></td>
+        <td><span class="time-ago">${m.first}</span></td>
+        <td><span class="${m.last === '—' ? 'dash' : 'time-ago'}">${m.last}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('q');
+    if (q) {
+      document.getElementById('nlQuery').textContent = q;
+      document.getElementById('metricSearch').value = q;
+    }
+    render(pickDataset(q));
+  });
+
+  function toggleAiDropdown() {
+    document.getElementById('aiDropdown').classList.toggle('open');
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.ai-actions-wrap')) {
+      document.getElementById('aiDropdown').classList.remove('open');
+    }
+  });
+
+  function openDashboard() {
+    document.getElementById('aiDropdown').classList.remove('open');
+    document.getElementById('dashModal').classList.add('open');
+  }
+
+  function openOptimization() {
+    document.getElementById('aiDropdown').classList.remove('open');
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('q') || '';
+    window.location.href = 'governance.html?mode=optimize&from=' + encodeURIComponent(q);
+  }
+  function closeDashboard() {
+    document.getElementById('dashModal').classList.remove('open');
+  }
+  function saveDashboard() {
+    closeDashboard();
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = 'Dashboard saved — Platform Health Overview';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>

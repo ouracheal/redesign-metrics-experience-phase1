@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metrics – Unified Home</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f8;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.10;
+      animation: drift 12s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    .orb-1 { width: 500px; height: 500px; background: #7c3aed; top: -100px; left: -80px; animation-delay: 0s; }
+    .orb-2 { width: 380px; height: 380px; background: #a78bfa; top: 15%; right: -60px; animation-delay: -4s; }
+    .orb-3 { width: 280px; height: 280px; background: #6d28d9; bottom: 0; left: 35%; animation-delay: -8s; }
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(25px, 18px) scale(1.06); }
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(124,58,237,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,58,237,0.05) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px 60px;
+      overflow: hidden;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-width: 760px;
+      width: 100%;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(124,58,237,0.07);
+      border: 1px solid rgba(124,58,237,0.18);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #7c3aed;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .hero-eyebrow-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #7c3aed;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .hero h1 {
+      font-size: 68px;
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -2.5px;
+      margin-bottom: 20px;
+      color: #111827;
+    }
+    .hero h1 .gradient-text {
+      background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 40%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 17px;
+      color: #6b7280;
+      line-height: 1.6;
+      max-width: 500px;
+      margin: 0 auto 44px;
+    }
+
+    .search-wrap {
+      display: flex;
+      align-items: center;
+      max-width: 660px;
+      margin: 0 auto 16px;
+      background: #fff;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 6px 6px 6px 18px;
+      gap: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-wrap:focus-within {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.12), 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .search-icon { color: #9ca3af; flex-shrink: 0; }
+    .search-wrap input {
+      flex: 1; border: none; outline: none;
+      font-size: 15px; color: #111827; background: transparent;
+    }
+    .search-wrap input::placeholder { color: #9ca3af; }
+
+    .btn-ai {
+      display: flex; align-items: center; gap: 7px;
+      background: #7c3aed;
+      color: #fff; border: none; border-radius: 10px;
+      padding: 10px 20px; font-size: 14px; font-weight: 600;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(124,58,237,0.3);
+      transition: background 0.15s, transform 0.15s;
+    }
+    .btn-ai:hover { background: #6d28d9; transform: translateY(-1px); }
+
+    .search-hints {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; flex-wrap: wrap;
+      margin-bottom: 64px;
+    }
+    .hint-label { font-size: 12px; color: #9ca3af; }
+    .hint-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #fff; border: 1px solid #e5e7eb;
+      border-radius: 20px; padding: 4px 12px;
+      font-size: 12px; color: #6b7280;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .hint-chip:hover { background: #f3f0ff; border-color: #c4b5fd; color: #7c3aed; }
+
+    .stats-strip {
+      display: flex; align-items: center; justify-content: center;
+      gap: 40px;
+      padding: 20px 0;
+      border-top: 1px solid #e5e7eb;
+      border-bottom: 1px solid #e5e7eb;
+      width: 100%;
+      max-width: 800px;
+    }
+    .stat { text-align: center; }
+    .stat-value { font-size: 28px; font-weight: 800; color: #111827; letter-spacing: -1px; }
+    .stat-value span { background: linear-gradient(135deg,#7c3aed,#6d28d9); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .stat-label { font-size: 12px; color: #9ca3af; margin-top: 3px; }
+    .stat-divider { width: 1px; height: 36px; background: #e5e7eb; }
+
+    /* ── Suggestion cards ── */
+    .suggestions-label {
+      font-size: 11px; color: #9ca3af; margin-top: 32px; margin-bottom: 10px;
+      letter-spacing: 0.03em; max-width: 660px; margin-left: auto; margin-right: auto;
+      text-align: left; width: 100%;
+    }
+    .use-case-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      text-align: left;
+      max-width: 660px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .use-case-chip {
+      display: flex; align-items: flex-start; gap: 11px;
+      background: rgba(255,255,255,0.85);
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 13px 15px;
+      cursor: pointer; transition: all 0.15s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .use-case-chip:hover {
+      border-color: rgba(124,58,237,0.35);
+      background: #fff;
+      box-shadow: 0 4px 16px rgba(124,58,237,0.09);
+      transform: translateY(-1px);
+    }
+    .use-case-icon {
+      width: 30px; height: 30px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .use-case-body { flex: 1; min-width: 0; }
+    .use-case-query {
+      font-size: 13px; font-weight: 500; color: #111827;
+      line-height: 1.45; margin-bottom: 7px;
+    }
+    .use-case-footer {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; color: #9ca3af;
+    }
+    .use-case-dest-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #f3f4f6; border-radius: 5px;
+      padding: 2px 7px; font-size: 10.5px; color: #6b7280; font-weight: 600;
+    }
+
+    /* ── Governance section ── */
+    .gov-section-wrap {
+      max-width: 660px; margin: 28px auto 0;
+      text-align: left; width: 100%;
+    }
+    .gov-section-label {
+      font-size: 11px; color: #9ca3af; margin-bottom: 10px; letter-spacing: 0.03em;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .gov-section-label::after {
+      content: ''; flex: 1; height: 1px; background: #e5e7eb;
+    }
+    .gov-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .gov-card {
+      display: flex; flex-direction: column; gap: 10px;
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(124,58,237,0.15);
+      border-radius: 12px;
+      padding: 14px 16px;
+      cursor: pointer; transition: all 0.15s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      text-decoration: none;
+    }
+    .gov-card:hover {
+      border-color: rgba(124,58,237,0.4);
+      background: #fff;
+      box-shadow: 0 4px 16px rgba(124,58,237,0.1);
+      transform: translateY(-1px);
+    }
+    .gov-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .gov-card-icon {
+      width: 30px; height: 30px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .gov-agentic-badge {
+      font-size: 9.5px; font-weight: 700; color: #059669;
+      background: rgba(5,150,105,0.08);
+      border: 1px solid rgba(5,150,105,0.2);
+      border-radius: 20px; padding: 2px 8px; letter-spacing: 0.05em;
+      text-transform: uppercase; white-space: nowrap; flex-shrink: 0;
+    }
+    .gov-card-title {
+      font-size: 13px; font-weight: 600; color: #111827; line-height: 1.4;
+    }
+    .gov-card-trigger {
+      display: flex; align-items: center; gap: 7px;
+      background: #f9f7ff;
+      border: 1px solid rgba(124,58,237,0.15);
+      border-radius: 7px; padding: 7px 10px;
+      font-size: 11.5px; color: #4b5563; line-height: 1.4;
+    }
+    .gov-card-footer {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; color: #9ca3af;
+    }
+    .gov-dest-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(124,58,237,0.07); border-radius: 5px;
+      padding: 2px 7px; font-size: 10.5px; color: #7c3aed; font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="hero-inner">
+    <div class="hero-eyebrow">
+      <div class="hero-eyebrow-dot"></div>
+      Powered by Bits AI
+    </div>
+
+    <h1>Find, query,<br><span class="gradient-text">act on your metrics.</span></h1>
+
+    <p class="hero-sub">One place to discover metrics, investigate issues, and manage metric health — no tribal knowledge required.</p>
+
+    <div class="search-wrap">
+      <span class="search-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </span>
+      <input id="heroSearch" type="text" placeholder="Ask a question or search metrics, tags, services…" />
+      <button class="btn-ai" onclick="doSearch()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+        Ask AI
+      </button>
+    </div>
+
+    <div class="search-hints">
+      <span class="hint-label">Try:</span>
+      <span class="hint-chip" onclick="fillSearch('metrics for platform health')">platform health</span>
+      <span class="hint-chip" onclick="fillSearch('CPU usage in prod last 1 hour by service')">CPU in prod</span>
+      <span class="hint-chip" onclick="fillSearch('checkout conversion rate metrics')">checkout metrics</span>
+      <span class="hint-chip" onclick="fillSearch('metrics for payments service')">payments service</span>
+      <span class="hint-chip" onclick="fillSearch('metrics owned by my team')">my team's metrics</span>
+    </div>
+
+    <div class="stats-strip">
+      <div class="stat"><div class="stat-value"><span>4,821</span></div><div class="stat-label">Total Metrics</div></div>
+      <div class="stat-divider"></div>
+      <div class="stat"><div class="stat-value"><span>247</span></div><div class="stat-label">Custom Metrics</div></div>
+      <div class="stat-divider"></div>
+      <div class="stat"><div class="stat-value"><span>18</span></div><div class="stat-label">Integrations</div></div>
+      <div class="stat-divider"></div>
+      <div class="stat"><div class="stat-value"><span>6</span></div><div class="stat-label">Environments</div></div>
+      <div class="stat-divider"></div>
+      <div class="stat"><div class="stat-value"><span>99.8%</span></div><div class="stat-label">Uptime</div></div>
+    </div>
+
+    <p class="suggestions-label">Try asking</p>
+    <div class="use-case-row">
+
+      <div class="use-case-chip" onclick="fillSearch('show me metrics that monitor the health of my platform')">
+        <div class="use-case-icon" style="background:rgba(124,58,237,0.08);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        </div>
+        <div class="use-case-body">
+          <div class="use-case-query">Show me metrics that monitor the health of my platform</div>
+          <div class="use-case-footer">→ <span class="use-case-dest-badge">Metric Summary</span></div>
+        </div>
+      </div>
+
+      <div class="use-case-chip" onclick="fillSearch('CPU usage in prod for the last 1 hour broken down by service')">
+        <div class="use-case-icon" style="background:rgba(239,68,68,0.08);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="use-case-body">
+          <div class="use-case-query">CPU usage in prod for the last hour, broken down by service</div>
+          <div class="use-case-footer">→ <span class="use-case-dest-badge">Metrics Explorer</span></div>
+        </div>
+      </div>
+
+      <div class="use-case-chip" onclick="fillSearch('checkout conversion rate metrics')">
+        <div class="use-case-icon" style="background:rgba(16,185,129,0.08);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <div class="use-case-body">
+          <div class="use-case-query">What metrics track checkout conversion rate?</div>
+          <div class="use-case-footer">→ <span class="use-case-dest-badge">Metric Summary</span></div>
+        </div>
+      </div>
+
+      <div class="use-case-chip" onclick="fillSearch('metrics for payments service')">
+        <div class="use-case-icon" style="background:rgba(245,158,11,0.08);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div class="use-case-body">
+          <div class="use-case-query">Show all metrics for the payments service</div>
+          <div class="use-case-footer">→ <span class="use-case-dest-badge">Metric Summary</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Governance workflows -->
+    <div class="gov-section-wrap">
+      <div class="gov-section-label">Agentic governance workflows</div>
+      <div class="gov-row">
+
+        <div class="gov-card" onclick="window.location.href='governance.html?q=usage+spike+detected'">
+          <div class="gov-card-top">
+            <div class="gov-card-icon" style="background:rgba(245,158,11,0.1);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <span class="gov-agentic-badge">Agentic</span>
+          </div>
+          <div class="gov-card-title">Spike Detection</div>
+          <div class="gov-card-trigger">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Usage spike detected in the last 24 hours
+          </div>
+          <div class="gov-card-footer">→ <span class="gov-dest-badge">Governance</span></div>
+        </div>
+
+        <div class="gov-card" onclick="window.location.href='governance.html?mode=optimize&q=unused+custom+metrics'">
+          <div class="gov-card-top">
+            <div class="gov-card-icon" style="background:rgba(124,58,237,0.08);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <span class="gov-agentic-badge">Agentic</span>
+          </div>
+          <div class="gov-card-title">Metric Optimization Planning</div>
+          <div class="gov-card-trigger">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            120 custom metrics unused in the last 90 days
+          </div>
+          <div class="gov-card-footer">→ <span class="gov-dest-badge">Governance</span></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<script>
+  function doSearch() {
+    const q = document.getElementById('heroSearch').value.trim();
+    if (!q) return;
+    const ql = q.toLowerCase();
+
+    if (/\b(last \d+|broken down|by (service|env|region|host|az)|p99|p95|avg|sum|rate|over time|spike|usage in prod|cpu|latency|error rate|throughput)\b/.test(ql)) {
+      window.location.href = 'metrics-explorer.html?q=' + encodeURIComponent(q);
+      return;
+    }
+    if (/\b(unused|spike|cost|optim|quota|expensive|governance|cardinality|budget)\b/.test(ql)) {
+      window.location.href = 'governance.html?q=' + encodeURIComponent(q);
+      return;
+    }
+    window.location.href = 'metric-summary.html?q=' + encodeURIComponent(q);
+  }
+
+  function fillSearch(q) {
+    document.getElementById('heroSearch').value = q;
+    doSearch();
+  }
+
+  document.getElementById('heroSearch').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doSearch();
+  });
+</script>
+
+</body>
+</html>

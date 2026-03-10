@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metrics – Explorer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #fff; color: #1a1a2e;
+      height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+      font-size: 13px;
+    }
+
+    /* ── Top nav ── */
+    .topnav {
+      display: flex; align-items: center;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0 20px; height: 46px; flex-shrink: 0;
+      background: #fff; gap: 0;
+    }
+    .topnav-logo {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 600; color: #111827;
+      margin-right: 24px; white-space: nowrap;
+    }
+    .topnav-logo svg { color: #7c3aed; }
+    .nav-tabs { display: flex; align-items: center; flex: 1; }
+    .nav-tab {
+      padding: 0 14px; height: 46px;
+      display: flex; align-items: center;
+      font-size: 13px; color: #6b7280;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -1px; white-space: nowrap;
+      transition: color 0.15s; text-decoration: none; position: relative;
+    }
+    .nav-tab:hover { color: #374151; }
+    .nav-tab.active { color: #111827; border-bottom-color: #7c3aed; font-weight: 500; }
+    .nav-tab .preview-badge {
+      position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+      font-size: 9px; font-weight: 700; color: #7c3aed; letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .nav-tab.has-preview { padding-top: 14px; }
+    .topnav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+    .nav-icon-btn {
+      width: 30px; height: 30px; border: 1px solid #e5e7eb; border-radius: 5px;
+      background: #fff; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #6b7280; transition: background 0.15s; flex-shrink: 0;
+    }
+    .nav-icon-btn:hover { background: #f9fafb; }
+    .time-controls { display: flex; align-items: center; border: 1px solid #e5e7eb; border-radius: 5px; overflow: hidden; }
+    .time-label-box { padding: 5px 10px; background: #f9fafb; border-right: 1px solid #e5e7eb; font-size: 12.5px; font-weight: 600; color: #111827; white-space: nowrap; }
+    .time-range-btn { padding: 5px 10px; background: #fff; border-right: 1px solid #e5e7eb; font-size: 12.5px; color: #374151; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+    .time-range-btn:hover { background: #f9fafb; }
+    .time-nav-btn { width: 30px; height: 30px; background: #fff; border: none; border-right: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: center; color: #6b7280; cursor: pointer; transition: background 0.15s; font-size: 14px; }
+    .time-nav-btn:last-child { border-right: none; }
+    .time-nav-btn:hover { background: #f9fafb; }
+    .time-nav-btn.pause { background: #7c3aed; color: #fff; }
+    .time-nav-btn.pause:hover { background: #6d28d9; }
+
+    /* ── AI bar ── */
+    .ai-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 20px;
+      background: #faf9ff;
+      border-bottom: 1px solid rgba(124,58,237,0.14);
+      flex-shrink: 0;
+    }
+    .ai-bar-icon { color: #7c3aed; flex-shrink: 0; }
+    .ai-bar-input-wrap {
+      flex: 1; display: flex; align-items: center;
+      background: #fff;
+      border: 1.5px solid rgba(124,58,237,0.22);
+      border-radius: 8px;
+      padding: 5px 12px; gap: 8px;
+      max-width: 620px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .ai-bar-input-wrap:focus-within {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 2px rgba(124,58,237,0.1);
+    }
+    .ai-bar-input {
+      flex: 1; border: none; outline: none;
+      font-size: 13px; color: #111827; background: transparent;
+    }
+    .ai-bar-input::placeholder { color: #9ca3af; }
+    .ai-bar-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: #7c3aed; color: #fff; border: none;
+      border-radius: 6px; padding: 5px 14px;
+      font-size: 12.5px; font-weight: 600; cursor: pointer;
+      flex-shrink: 0; transition: background 0.15s;
+    }
+    .ai-bar-btn:hover { background: #6d28d9; }
+    .ai-bar-hint { font-size: 11px; color: #9ca3af; white-space: nowrap; }
+
+    /* ── Main layout ── */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Content ── */
+    .content { flex: 1; overflow-y: auto; background: #fff; }
+    .content-inner { padding: 14px 20px 24px; }
+
+    /* Top controls row */
+    .top-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .btn-split {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border: 1px solid #d1d5db; border-radius: 5px;
+      background: #fff; font-size: 12.5px; color: #374151; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-split:hover { background: #f9fafb; }
+    .legacy-link { font-size: 12.5px; color: #9ca3af; cursor: pointer; white-space: nowrap; margin-left: 4px; }
+    .legacy-link:hover { color: #7c3aed; }
+    .cmdi-toggle {
+      display: flex; align-items: center; gap: 7px;
+      padding: 5px 14px; border: 1.5px solid rgba(124,58,237,0.3); border-radius: 6px;
+      background: rgba(124,58,237,0.06); font-size: 12.5px; color: #7c3aed; font-weight: 500;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap; margin-left: auto;
+    }
+    .cmdi-toggle:hover { background: rgba(124,58,237,0.1); border-color: #7c3aed; }
+    .cmdi-toggle kbd { background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.2); border-radius: 4px; padding: 1px 5px; font-family: monospace; font-size: 11px; }
+
+    /* Intent banner */
+    .intent-banner {
+      display: none; align-items: center; gap: 8px;
+      padding: 6px 12px; margin-bottom: 12px;
+      background: rgba(124,58,237,0.04); border: 1px solid rgba(124,58,237,0.15);
+      border-radius: 7px; font-size: 12.5px; color: #374151;
+    }
+    .intent-banner.show { display: flex; }
+    .intent-banner strong { color: #7c3aed; }
+    .intent-banner code { background: rgba(124,58,237,0.1); color: #6d28d9; padding: 2px 6px; border-radius: 4px; font-family: "SF Mono","Fira Code",monospace; font-size: 11.5px; }
+
+    /* ── Query card ── */
+    .query-card {
+      border: 1.5px solid rgba(124,58,237,0.2);
+      border-radius: 8px;
+      background: rgba(124,58,237,0.02);
+      margin-bottom: 10px;
+    }
+    .query-card-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 14px 8px; border-bottom: 1px solid rgba(124,58,237,0.1);
+    }
+    .query-card-header svg { color: #7c3aed; flex-shrink: 0; }
+    .query-title-input {
+      flex: 1; border: none; outline: none; background: transparent;
+      font-size: 13px; color: #374151; font-family: inherit;
+    }
+    .query-title-input::placeholder { color: #9ca3af; }
+    .qch-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+    .icon-btn {
+      width: 26px; height: 26px; border: none; border-radius: 5px;
+      background: transparent; color: #9ca3af; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+    }
+    .icon-btn:hover { background: rgba(124,58,237,0.08); color: #7c3aed; }
+
+    /* Query row */
+    .query-row {
+      display: flex; align-items: center; flex-wrap: wrap;
+      gap: 4px; padding: 9px 14px;
+    }
+    .qr-letter {
+      width: 24px; height: 24px; border-radius: 4px;
+      background: #3b5bdb; color: #fff; font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .qr-field {
+      display: flex; align-items: center; gap: 4px;
+      padding: 4px 8px; border-radius: 4px; font-size: 12.5px;
+      cursor: pointer; white-space: nowrap; border: 1px solid transparent; transition: border-color 0.15s;
+    }
+    .qr-field:hover { border-color: #d1d5db; }
+    .qr-field.ftype { background: #fff; border-color: #d1d5db; color: #374151; }
+    .qr-field.metric { background: #fefce8; border-color: #fef08a; color: #1a1a2e; font-family: "SF Mono","Fira Code",monospace; font-size: 12px; }
+    .qr-field.filter { background: #fff; border-color: #e5e7eb; color: #9ca3af; }
+    .qr-field.groupby { background: #f5f3ff; border-color: #ddd6fe; color: #6d28d9; }
+    .qr-field.astype { background: #fff; border-color: #d1d5db; color: #374151; }
+    .qr-label { font-size: 12px; color: #9ca3af; padding: 0 2px; white-space: nowrap; }
+    .qr-modify {
+      display: flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border: 1px solid #d1d5db; border-radius: 4px;
+      background: #fff; font-size: 12.5px; color: #374151; cursor: pointer; transition: background 0.15s;
+    }
+    .qr-modify:hover { background: #f9fafb; }
+    .qr-divider { width: 1px; height: 20px; background: #e5e7eb; margin: 0 4px; flex-shrink: 0; }
+    .qr-code-btn {
+      display: flex; align-items: center; padding: 3px 7px;
+      border: 1px solid #e5e7eb; border-radius: 4px;
+      background: #fff; font-size: 11px; color: #6b7280; cursor: pointer; font-family: monospace;
+    }
+    .toggle-pill {
+      width: 32px; height: 18px; border-radius: 9px; background: #7c3aed;
+      cursor: pointer; flex-shrink: 0; position: relative; transition: background 0.2s;
+    }
+    .toggle-pill::after { content: ''; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #fff; top: 2px; right: 2px; transition: right 0.2s; }
+    .toggle-pill.off { background: #d1d5db; }
+    .toggle-pill.off::after { right: 16px; }
+    .qr-onprem { font-size: 12px; color: #6b7280; }
+    .qr-as { font-size: 12px; color: #9ca3af; cursor: pointer; }
+    .qr-as:hover { color: #374151; }
+
+    /* Add query / formula */
+    .add-query-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .btn-add {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 14px; border: 1px solid #d1d5db; border-radius: 5px;
+      background: #fff; font-size: 12.5px; color: #374151; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-add:hover { background: #f9fafb; }
+
+    /* Display options bar */
+    .display-bar {
+      display: flex; align-items: center; gap: 14px;
+      padding: 8px 0; border-bottom: 1px solid #f3f4f6; margin-bottom: 10px; flex-wrap: wrap;
+    }
+    .disp-item { display: flex; align-items: center; gap: 6px; }
+    .disp-label { font-size: 12px; color: #9ca3af; }
+    .disp-chip {
+      display: flex; align-items: center; gap: 4px;
+      padding: 3px 9px; border: 1px solid #e5e7eb; border-radius: 4px;
+      background: #f9fafb; font-size: 12.5px; color: #374151; cursor: pointer; white-space: nowrap;
+    }
+    .disp-chip.selected { background: rgba(124,58,237,0.08); border-color: rgba(124,58,237,0.3); color: #7c3aed; font-weight: 500; }
+    .disp-chip:hover:not(.selected) { background: #f3f4f6; }
+    .color-dots { display: flex; gap: 2px; margin-right: 2px; }
+    .color-dot { width: 9px; height: 9px; border-radius: 2px; }
+    .toggle-sm {
+      width: 30px; height: 17px; border-radius: 9px; background: #d1d5db;
+      cursor: pointer; flex-shrink: 0; position: relative; transition: background 0.2s;
+    }
+    .toggle-sm::after { content: ''; position: absolute; width: 13px; height: 13px; border-radius: 50%; background: #fff; top: 2px; left: 2px; transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+
+    /* One graph per query row */
+    .graph-opts-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .toggle-label { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #374151; cursor: pointer; }
+    .graph-opts-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .btn-sheets {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 13px; border: 1px solid #d1d5db; border-radius: 5px;
+      background: #fff; font-size: 12.5px; color: #374151; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-sheets:hover { background: #f9fafb; }
+    .new-badge { font-size: 9px; font-weight: 700; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.05em; }
+    .btn-more { padding: 5px 12px; border: 1px solid #d1d5db; border-radius: 5px; background: #fff; font-size: 12.5px; color: #374151; cursor: pointer; }
+    .btn-more:hover { background: #f9fafb; }
+
+    /* Chart */
+    .chart-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .chart-query-label { font-size: 12.5px; color: #374151; font-family: "SF Mono","Fira Code",monospace; }
+    .chart-act-btns { display: flex; align-items: center; gap: 5px; }
+    .chart-act-btn {
+      width: 28px; height: 28px; border: 1px solid #e5e7eb; border-radius: 4px;
+      background: #fff; display: flex; align-items: center; justify-content: center;
+      color: #9ca3af; cursor: pointer; transition: all 0.15s;
+    }
+    .chart-act-btn:hover { background: #f9fafb; color: #374151; }
+    .chart-svg-wrap { border-top: 1px solid #e5e7eb; padding-top: 12px; }
+    .chart-svg { width: 100%; overflow: visible; display: block; }
+
+    /* ── Right panel - Bits Assistant ── */
+    .cmdi-panel {
+      width: 340px; flex-shrink: 0;
+      background: #0f1123;
+      border-left: 1px solid rgba(255,255,255,0.06);
+      display: flex; flex-direction: column;
+      transition: width 0.25s cubic-bezier(0.4,0,0.2,1);
+      position: relative; overflow: hidden;
+    }
+    .cmdi-panel.collapsed { width: 0; }
+
+    /* Starfield */
+    .cmdi-starfield {
+      position: absolute; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,0.18) 1px, transparent 1px),
+        radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+      background-size: 48px 48px, 29px 29px;
+      background-position: 3px 7px, 17px 22px;
+    }
+
+    /* All content above starfield */
+    .cmdi-inner { position: relative; z-index: 1; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* Top strip */
+    .cmdi-topstrip {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px 8px; flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .cmdi-topstrip-title { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.5); letter-spacing: 0.02em; }
+    .cmdi-close {
+      color: rgba(255,255,255,0.3); cursor: pointer; font-size: 15px;
+      transition: color 0.15s; display: flex; align-items: center;
+    }
+    .cmdi-close:hover { color: rgba(255,255,255,0.7); }
+
+    /* Nav icons row */
+    .cmdi-nav-icons {
+      display: flex; align-items: center; gap: 4px;
+      padding: 10px 14px 6px; flex-shrink: 0;
+    }
+    .cmdi-nav-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.35); cursor: pointer; transition: all 0.15s;
+    }
+    .cmdi-nav-icon:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
+    .cmdi-nav-icon.active { color: rgba(255,255,255,0.7); }
+
+    /* Main header */
+    .cmdi-header {
+      padding: 24px 20px 20px; flex-shrink: 0;
+    }
+    .cmdi-header-title-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+    }
+    .cmdi-header-icon {
+      font-size: 22px; color: #a78bfa; line-height: 1;
+    }
+    .cmdi-header-title { font-size: 20px; font-weight: 700; color: #fff; line-height: 1.2; }
+    .cmdi-preview-badge {
+      font-size: 10px; font-weight: 800; color: #a78bfa;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      border: 1px solid rgba(167,139,250,0.4); border-radius: 4px;
+      padding: 2px 6px; flex-shrink: 0;
+    }
+    .cmdi-header-sub { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.55; }
+
+    /* Suggestion cards area */
+    .cmdi-sugs-wrap {
+      flex: 1; overflow-y: auto; padding: 8px 14px 12px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .cmdi-sug-card {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 15px 16px;
+      cursor: pointer; transition: all 0.18s;
+    }
+    .cmdi-sug-card:hover {
+      background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.15);
+    }
+    .cmdi-sug-card-text {
+      flex: 1; font-size: 14px; font-weight: 500; color: #fff; line-height: 1.4;
+    }
+    .cmdi-sug-card-arrow {
+      color: rgba(255,255,255,0.3); font-size: 18px; flex-shrink: 0; font-weight: 300;
+    }
+
+    /* Messages (shown after first interaction) */
+    .cmdi-history-label { display: flex; align-items: center; gap: 8px; padding: 10px 16px 4px; flex-shrink: 0; }
+    .cmdi-history-label span { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.25); }
+    .cmdi-history-label div { flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
+    .cmdi-messages { overflow-y: auto; padding: 6px 0; }
+    .msg { padding: 6px 16px; }
+    .msg-user .msg-bubble {
+      background: rgba(124,58,237,0.35); border: 1px solid rgba(124,58,237,0.4);
+      border-radius: 12px 12px 4px 12px;
+      padding: 10px 13px; font-size: 13px; color: #fff;
+      max-width: 88%; margin-left: auto; line-height: 1.5;
+    }
+    .msg-ai .msg-bubble {
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 4px 12px 12px 12px;
+      padding: 10px 13px; font-size: 13px; color: rgba(255,255,255,0.85);
+      max-width: 95%; line-height: 1.55;
+    }
+    .msg-ai .msg-avatar {
+      width: 22px; height: 22px; border-radius: 6px;
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; margin-bottom: 5px; color: #fff;
+    }
+    .msg-ts { font-size: 10px; color: rgba(255,255,255,0.2); margin-top: 4px; text-align: right; }
+    .msg-ts.left { text-align: left; }
+    .msg-highlight {
+      display: inline-block; background: rgba(124,58,237,0.35);
+      color: #c4b5fd; border-radius: 4px; padding: 1px 5px;
+      font-family: "SF Mono","Fira Code",monospace; font-size: 11.5px;
+    }
+
+    /* Follow-up chips (after interaction) */
+    .cmdi-followups { padding: 4px 16px 8px; flex-shrink: 0; }
+    .cmdi-followups-label { font-size: 10.5px; color: rgba(255,255,255,0.3); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+    .cmdi-chip {
+      display: flex; align-items: center; gap: 7px;
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 8px 12px;
+      font-size: 12.5px; color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.05);
+      cursor: pointer; transition: all 0.15s; margin-bottom: 5px; line-height: 1.3;
+    }
+    .cmdi-chip:hover { border-color: rgba(124,58,237,0.5); background: rgba(124,58,237,0.2); color: #fff; }
+    .cmdi-chip-icon { font-size: 13px; flex-shrink: 0; }
+
+    /* Input */
+    .cmdi-input-wrap {
+      padding: 12px 16px 16px; border-top: 1px solid rgba(255,255,255,0.08); flex-shrink: 0;
+    }
+    .cmdi-input {
+      background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: 12px; padding: 10px 12px;
+      transition: border-color 0.2s;
+    }
+    .cmdi-input:focus-within { border-color: rgba(124,58,237,0.6); }
+    .cmdi-input textarea {
+      width: 100%; border: none; outline: none; resize: none;
+      font-size: 13px; color: #fff; font-family: inherit;
+      min-height: 40px; max-height: 100px; line-height: 1.5;
+      background: transparent;
+    }
+    .cmdi-input textarea::placeholder { color: rgba(255,255,255,0.3); }
+    .cmdi-input-actions {
+      display: flex; align-items: center; gap: 10px; margin-top: 8px;
+    }
+    .cmdi-input-icon {
+      color: rgba(255,255,255,0.35); cursor: pointer; transition: color 0.15s;
+      display: flex; align-items: center;
+    }
+    .cmdi-input-icon:hover { color: rgba(255,255,255,0.7); }
+    .cmdi-autoapprove {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11.5px; color: rgba(255,255,255,0.35); margin-left: auto;
+    }
+    .cmdi-autoapprove-toggle {
+      width: 32px; height: 18px; border-radius: 9px; background: rgba(255,255,255,0.15);
+      position: relative; cursor: pointer; flex-shrink: 0;
+    }
+    .cmdi-autoapprove-toggle::after {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,0.5);
+      transition: left 0.2s;
+    }
+    .cmdi-send {
+      width: 30px; height: 30px; border-radius: 8px; border: none;
+      background: rgba(124,58,237,0.8); color: #fff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: background 0.15s;
+    }
+    .cmdi-send:hover { background: #7c3aed; }
+
+    .typing { display: flex; align-items: center; gap: 4px; padding: 4px 0; }
+    .typing span { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); animation: bounce 1.2s infinite; }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
+  </style>
+</head>
+<body>
+
+<!-- Top nav -->
+<div class="topnav">
+  <div class="topnav-logo">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Metrics
+  </div>
+  <div class="nav-tabs">
+    <a class="nav-tab" href="index.html">Overview</a>
+    <a class="nav-tab active">Explorer</a>
+    <a class="nav-tab" href="metric-summary.html">Summary</a>
+    <a class="nav-tab">Volume</a>
+    <a class="nav-tab has-preview">
+      <span class="preview-badge">Preview</span>
+      Generate Metrics
+    </a>
+  </div>
+  <div class="topnav-right">
+    <div class="nav-icon-btn" title="Settings">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </div>
+    <div style="font-size:10px;color:#9ca3af;text-align:right;line-height:1.3;">UTC-04:00</div>
+    <div class="time-controls">
+      <div class="time-label-box">1h</div>
+      <div class="time-range-btn">Past 1 Hour ▾</div>
+      <button class="time-nav-btn">‹</button>
+      <button class="time-nav-btn pause">‖</button>
+      <button class="time-nav-btn">›</button>
+    </div>
+    <div class="nav-icon-btn" title="Search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </div>
+  </div>
+</div>
+
+<!-- AI bar -->
+<div class="ai-bar">
+  <svg class="ai-bar-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+  <div class="ai-bar-input-wrap">
+    <input class="ai-bar-input" id="aiBarInput" type="text" placeholder="Ask anything about your metrics…" />
+  </div>
+  <button class="ai-bar-btn" onclick="aiBarSearch()">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+    Ask AI
+  </button>
+  <span class="ai-bar-hint">Routes to Explorer, Summary, or Governance based on intent</span>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Content -->
+  <div class="content">
+    <div class="content-inner">
+
+      <!-- Top controls -->
+      <div class="top-controls">
+        <button class="btn-split">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Split Graph
+        </button>
+        <span class="legacy-link">Classic Explorer ↗</span>
+        <button class="cmdi-toggle" id="cmdiToggleBtn" onclick="toggleCmdi()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+          Ask AI
+          <kbd>⌘I</kbd>
+        </button>
+      </div>
+
+      <!-- Intent banner (shown when routed from NL search) -->
+      <div class="intent-banner" id="intentBanner">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="color:#7c3aed;flex-shrink:0"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+        Query generated from: <strong id="intentText"></strong> →
+        <code id="intentCode"></code>
+        <span style="margin-left:auto;color:#9ca3af;cursor:pointer;font-size:13px;" onclick="document.getElementById('intentBanner').classList.remove('show')">✕</span>
+      </div>
+
+      <!-- Query card -->
+      <div class="query-card">
+        <div class="query-card-header">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+          <input class="query-title-input" id="queryTitleInput" type="text" placeholder="Describe what you want to see in natural language…" onkeydown="handleTitleKey(event)" />
+          <div class="qch-actions">
+            <button class="icon-btn" title="Run query" onclick="rerunQuery()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+            </button>
+            <button class="icon-btn" title="Close">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="query-row">
+          <div class="qr-letter">a</div>
+          <div class="qr-field ftype">Metrics ▾</div>
+          <div class="qr-field metric" id="qrMetric">system.cpu.user</div>
+          <span class="qr-label">from</span>
+          <div class="qr-field filter" id="qrFilter">(everywhere)</div>
+          <span class="qr-label" id="qrAggLabel">avg by</span>
+          <div class="qr-field groupby" id="qrGroupBy">(everything)</div>
+          <span class="qr-label">as</span>
+          <div class="qr-field astype">count</div>
+          <button class="qr-modify">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/></svg>
+            Σ Modify
+          </button>
+          <div class="qr-divider"></div>
+          <div class="qr-code-btn">&lt;/&gt;</div>
+          <div class="toggle-pill" id="onpremToggle" onclick="this.classList.toggle('off')"></div>
+          <span class="qr-onprem">On-Prem</span>
+          <span class="qr-as">as…</span>
+        </div>
+      </div>
+
+      <!-- Add Query / Formula -->
+      <div class="add-query-row">
+        <button class="btn-add">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Query
+        </button>
+        <button class="btn-add">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Formula
+        </button>
+      </div>
+
+      <!-- Display options -->
+      <div class="display-bar">
+        <div class="disp-item">
+          <span class="disp-label">Display:</span>
+          <div class="disp-chip selected">Lines ▾</div>
+        </div>
+        <div class="disp-item">
+          <span class="disp-label">Style:</span>
+          <div class="disp-chip">Solid ▾</div>
+        </div>
+        <div class="disp-item">
+          <span class="disp-label">Stroke:</span>
+          <div class="disp-chip">Normal ▾</div>
+        </div>
+        <div class="disp-item">
+          <span class="disp-label">Color:</span>
+          <div class="disp-chip">
+            <div class="color-dots">
+              <div class="color-dot" style="background:#7c3aed"></div>
+              <div class="color-dot" style="background:#f59e0b"></div>
+              <div class="color-dot" style="background:#10b981"></div>
+            </div>
+            Classic ▾
+          </div>
+        </div>
+        <div class="disp-item">
+          <span class="disp-label">Order by:</span>
+          <div class="disp-chip">Tags ▾</div>
+        </div>
+        <div class="disp-item">
+          <div class="toggle-sm"></div>
+          <span style="font-size:12.5px;color:#374151;">Reverse</span>
+        </div>
+      </div>
+
+      <!-- One graph per query row -->
+      <div class="graph-opts-row">
+        <label class="toggle-label">
+          <div class="toggle-sm"></div>
+          One graph per query
+        </label>
+        <div class="graph-opts-right">
+          <button class="btn-sheets">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Open in Sheets <span class="new-badge">NEW</span>
+          </button>
+          <button class="btn-more">More…</button>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="chart-title-row">
+        <span class="chart-query-label" id="chartQueryLabel">avg:system.cpu.user{*}.as_count()</span>
+        <div class="chart-act-btns">
+          <button class="chart-act-btn" title="Export">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+          <button class="chart-act-btn" title="Fullscreen">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="chart-svg-wrap">
+        <svg class="chart-svg" viewBox="0 0 900 230" xmlns="http://www.w3.org/2000/svg">
+          <!-- Grid -->
+          <line x1="36" y1="20" x2="900" y2="20" stroke="#f3f4f6" stroke-width="1"/>
+          <line x1="36" y1="63" x2="900" y2="63" stroke="#f3f4f6" stroke-width="1"/>
+          <line x1="36" y1="106" x2="900" y2="106" stroke="#f3f4f6" stroke-width="1"/>
+          <line x1="36" y1="149" x2="900" y2="149" stroke="#f3f4f6" stroke-width="1"/>
+          <line x1="36" y1="192" x2="900" y2="192" stroke="#e5e7eb" stroke-width="1"/>
+          <!-- Y labels -->
+          <text x="0" y="24" font-size="10" fill="#9ca3af">150</text>
+          <text x="0" y="67" font-size="10" fill="#9ca3af">100</text>
+          <text x="4" y="110" font-size="10" fill="#9ca3af">50</text>
+          <text x="8" y="196" font-size="10" fill="#9ca3af">0</text>
+          <!-- Data line -->
+          <path d="M50,162 L110,158 L170,160 L230,152 L290,147 L350,150 L410,134 L470,122 L530,118 L590,121 L650,112 L710,110 L770,107 L830,114 L890,117" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linejoin="round"/>
+          <!-- X labels -->
+          <text x="50"  y="210" font-size="10" fill="#9ca3af" text-anchor="middle">09:40</text>
+          <text x="140" y="210" font-size="10" fill="#9ca3af" text-anchor="middle">09:45</text>
+          <text x="230" y="210" font-size="10" fill="#9ca3af" text-anchor="middle">09:50</text>
+          <text x="320" y="210" font-size="10" fill="#9ca3af" text-anchor="middle">09:55</text>
+          <text x="410" y="210" font-size="10" fill="#9ca3af" text-anchor="middle">10:00</text>
+          <text x="500" y="210" font-size="10" fill="#9ca3af" text-anchor="middle">10:05</text>
+          <text x="590" y="210" font-size="10" fill="#9ca3af" text-anchor="middle">10:10</text>
+          <text x="680" y="210" font-size="10" fill="#9ca3af" text-anchor="middle">10:15</text>
+          <text x="770" y="210" font-size="10" fill="#9ca3af" text-anchor="middle">10:20</text>
+          <text x="860" y="210" font-size="10" fill="#9ca3af" text-anchor="middle">10:25</text>
+        </svg>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Bits Assistant panel -->
+  <div class="cmdi-panel" id="cmdiPanel">
+    <div class="cmdi-starfield"></div>
+    <div class="cmdi-inner">
+
+    <!-- Top strip -->
+    <div class="cmdi-topstrip">
+      <span class="cmdi-topstrip-title">Bits Assistant</span>
+      <span class="cmdi-close" onclick="toggleCmdi()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+      </span>
+    </div>
+
+    <!-- Nav icons -->
+    <div class="cmdi-nav-icons">
+      <div class="cmdi-nav-icon active" title="Chat">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div class="cmdi-nav-icon" title="Home">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <div class="cmdi-nav-icon" title="Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </div>
+    </div>
+
+    <!-- Main header -->
+    <div class="cmdi-header">
+      <div class="cmdi-header-title-row">
+        <span class="cmdi-header-icon">✦</span>
+        <span class="cmdi-header-title">Bits Assistant</span>
+        <span class="cmdi-preview-badge">PREVIEW</span>
+      </div>
+      <div class="cmdi-header-sub">Learn about your metrics and explore your systems. Just ask Bits!</div>
+    </div>
+
+    <!-- Suggestion cards (shown before first message) -->
+    <div class="cmdi-sugs-wrap" id="cmdiSugsWrap">
+      <div class="cmdi-sug-card" onclick="sendCmdiMessage('How did you execute this query?')">
+        <div class="cmdi-sug-card-text">How did you execute this query?</div>
+        <span class="cmdi-sug-card-arrow">›</span>
+      </div>
+      <div class="cmdi-sug-card" onclick="sendCmdiMessage('What other queries should I run?')">
+        <div class="cmdi-sug-card-text">What other queries should I run?</div>
+        <span class="cmdi-sug-card-arrow">›</span>
+      </div>
+      <div class="cmdi-sug-card" onclick="sendCmdiMessage('Who owns this service and what changed?')">
+        <div class="cmdi-sug-card-text">Who owns this service and what changed?</div>
+        <span class="cmdi-sug-card-arrow">›</span>
+      </div>
+    </div>
+
+    <!-- Messages (hidden until first interaction) -->
+    <div class="cmdi-messages" id="cmdiMessages" style="display:none; flex:1; overflow-y:auto;">
+      <div class="msg msg-user" id="userMsg" style="display:none;">
+        <div class="msg-bubble" id="userMsgText"></div>
+        <div class="msg-ts" id="userMsgTs"></div>
+      </div>
+      <div class="msg msg-ai" id="typingMsg" style="display:none;">
+        <div class="msg-avatar">✦</div>
+        <div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>
+      </div>
+      <div class="msg msg-ai" id="responseMsg" style="display:none;">
+        <div class="msg-avatar">✦</div>
+        <div class="msg-bubble" id="responseMsgText"></div>
+        <div class="msg-ts left" id="responseMsgTs"></div>
+      </div>
+    </div>
+
+    <!-- Follow-up chips (hidden until first interaction) -->
+    <div class="cmdi-followups" id="cmdiFollowups" style="display:none;">
+      <div class="cmdi-followups-label">Follow-ups</div>
+      <div class="cmdi-chip" onclick="sendCmdiMessage('Show me correlated metrics for this spike')">
+        <span class="cmdi-chip-icon">🔗</span> Show correlated metrics
+      </div>
+      <div class="cmdi-chip" onclick="sendCmdiMessage('Create a monitor for CPU usage above 80% in prod')">
+        <span class="cmdi-chip-icon">🔔</span> Draft a monitor for this
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="cmdi-input-wrap">
+      <div class="cmdi-input">
+        <textarea id="cmdiTextarea" rows="2" placeholder="Ask, plan, or navigate anywhere" onkeydown="handleCmdiKey(event)"></textarea>
+        <div class="cmdi-input-actions">
+          <span class="cmdi-input-icon" title="Mention">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg>
+          </span>
+          <span class="cmdi-input-icon" title="Attach screenshot">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </span>
+          <span class="cmdi-input-icon" title="Attach file">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </span>
+          <div class="cmdi-autoapprove">
+            Auto-approve
+            <div class="cmdi-autoapprove-toggle"></div>
+          </div>
+          <button class="cmdi-send" onclick="submitCmdi()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    </div><!-- cmdi-inner -->
+  </div>
+</div>
+
+<script>
+  // ── AI Bar ──
+  function aiBarSearch() {
+    const q = document.getElementById('aiBarInput').value.trim();
+    if (!q) return;
+    const ql = q.toLowerCase();
+    if (/\b(last \d+|broken down|by (service|env|region|host|az)|p99|p95|avg|sum|rate|over time|spike|usage in prod|cpu|latency|error rate|throughput)\b/.test(ql)) {
+      window.location.href = 'metrics-explorer.html?q=' + encodeURIComponent(q);
+      return;
+    }
+    if (/\b(unused|spike|cost|optim|quota|expensive|governance|cardinality|budget)\b/.test(ql)) {
+      window.location.href = 'governance.html?q=' + encodeURIComponent(q);
+      return;
+    }
+    window.location.href = 'metric-summary.html?q=' + encodeURIComponent(q);
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    const aiInput = document.getElementById('aiBarInput');
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('q')) aiInput.value = params.get('q');
+    aiInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') aiBarSearch(); });
+  });
+
+  let cmdiOpen = true;
+
+  function toggleCmdi() {
+    cmdiOpen = !cmdiOpen;
+    document.getElementById('cmdiPanel').classList.toggle('collapsed', !cmdiOpen);
+    document.getElementById('cmdiToggleBtn').style.background = cmdiOpen ? 'rgba(124,58,237,0.1)' : '';
+  }
+
+  function openCmdi() {
+    if (!cmdiOpen) toggleCmdi();
+  }
+
+  function parseNLQuery(q) {
+    const ql = q.toLowerCase();
+
+    let metric = 'system.cpu.user';
+    if (/\b(latency|response.?time|duration)\b/.test(ql))        metric = 'trace.http.request.duration';
+    else if (/\berror.?rate\b/.test(ql))                          metric = 'trace.http.request.errors';
+    else if (/\b(throughput|request.?count|rps|qps)\b/.test(ql)) metric = 'http.request.count';
+    else if (/\bmemory\b/.test(ql))                               metric = 'system.mem.used';
+    else if (/\bdisk\b/.test(ql))                                 metric = 'system.disk.used';
+    else if (/\bnetwork\b/.test(ql))                              metric = 'system.net.bytes_sent';
+    else if (/\bconversion\b/.test(ql))                           metric = 'checkout.conversion_rate';
+    else if (/\bcart\b/.test(ql))                                 metric = 'checkout.cart.abandonment_rate';
+    else if (/\bcheckout\b/.test(ql))                             metric = 'checkout.order.completion_rate';
+
+    let agg = 'avg by';
+    if (/\bp99\b/.test(ql))              agg = 'p99 by';
+    else if (/\bp95\b/.test(ql))         agg = 'p95 by';
+    else if (/\b(sum|total)\b/.test(ql)) agg = 'sum by';
+    else if (/\bmax(imum)?\b/.test(ql))  agg = 'max by';
+    else if (/\bmin(imum)?\b/.test(ql))  agg = 'min by';
+
+    let groupBy = 'everything';
+    const gm = ql.match(/\bby\s+(service|host|region|env|availability.?zone|az)\b/);
+    if (gm) groupBy = gm[1] === 'az' ? 'availability-zone' : gm[1];
+
+    let filterKey = 'env';
+    let filterVal = '';
+    if (/\bprod(uction)?\b/.test(ql))       filterVal = 'prod';
+    else if (/\bstaging\b/.test(ql))        filterVal = 'staging';
+    else if (/\bdev(elopment)?\b/.test(ql)) filterVal = 'dev';
+
+    let timeRange = 'Past 1 hour';
+    if (/\b4\s*h(our)?s?\b/.test(ql))                     timeRange = 'Past 4 hours';
+    else if (/\b(24\s*h(our)?s?|last\s*day)\b/.test(ql))  timeRange = 'Past 24 hours';
+    else if (/\b(7\s*d(ay)?s?|last\s*week)\b/.test(ql))   timeRange = 'Past 7 days';
+    else if (/\b(30\s*d(ay)?s?|last\s*month)\b/.test(ql)) timeRange = 'Past 30 days';
+
+    return { metric, agg, groupBy, filterKey, filterVal, timeRange };
+  }
+
+  function applyQueryConfig(cfg) {
+    document.getElementById('qrMetric').textContent = cfg.metric;
+    document.getElementById('qrAggLabel').textContent = cfg.agg;
+    document.getElementById('qrGroupBy').textContent = cfg.groupBy === 'everything' ? '(everything)' : cfg.groupBy;
+    document.getElementById('qrFilter').textContent = cfg.filterVal ? `${cfg.filterKey}:${cfg.filterVal}` : '(everywhere)';
+
+    const filterStr = cfg.filterVal ? `{${cfg.filterKey}:${cfg.filterVal}}` : '{*}';
+    const groupStr  = cfg.groupBy !== 'everything' ? ` by {${cfg.groupBy}}` : '';
+    const aggKey    = cfg.agg.replace(' by', '');
+    document.getElementById('intentCode').textContent = `${aggKey}:${cfg.metric}${filterStr}${groupStr}`;
+    document.getElementById('chartQueryLabel').textContent = `${aggKey}:${cfg.metric}${filterStr}.as_count()`;
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('q');
+    if (q) {
+      document.getElementById('queryTitleInput').value = q;
+      document.getElementById('intentText').textContent = `"${q}"`;
+      document.getElementById('intentBanner').classList.add('show');
+      applyQueryConfig(parseNLQuery(q));
+    }
+  });
+
+  function rerunQuery() {
+    const q = document.getElementById('queryTitleInput').value.trim();
+    if (!q) return;
+    document.getElementById('intentText').textContent = `"${q}"`;
+    document.getElementById('intentBanner').classList.add('show');
+    applyQueryConfig(parseNLQuery(q));
+  }
+
+  function handleTitleKey(e) {
+    if (e.key === 'Enter') rerunQuery();
+  }
+
+  const AI_RESPONSES = {
+    'How did you execute this query?':
+      'This query uses <span class="msg-highlight">avg by {service}</span> aggregation on <span class="msg-highlight">system.cpu.user</span> over the past hour.\n\nBits translated your natural language input into a Datadog metrics query, selected the best aggregation method based on context, and auto-applied the env and service filters from your active scope.',
+    'What other queries should I run?':
+      'Given the current metric, here are related queries worth exploring:\n\n• <span class="msg-highlight">avg:system.mem.used{*} by {service}</span> — memory pressure often correlates with CPU spikes\n• <span class="msg-highlight">p99:trace.http.request.duration{*}</span> — latency impact\n• <span class="msg-highlight">sum:k8s.pod.restart_count{*}</span> — container churn\n\nWant me to open any of these as a new query?',
+    'Who owns this service and what changed?':
+      '<strong>payments-svc</strong> is owned by the <strong>Platform Reliability</strong> team (@platform-reliability).\n\nRecent changes:\n• <strong>14:18</strong> — payments-api v2.4.1 deployed (batch size increase)\n• <strong>13:42</strong> — DB connection pool config updated\n• <strong>11:05</strong> — Autoscaling policy modified\n\nThe v2.4.1 deploy at 14:18 aligns closely with the CPU spike at 14:22.',
+    'What caused the CPU spike at 14:22 for payments-svc?':
+      '📍 At <strong>14:22</strong>, <span class="msg-highlight">payments-svc</span> CPU spiked to <strong>91%</strong>. This correlates with a 340% surge in <span class="msg-highlight">http.request.count{service:payments}</span> — likely a traffic burst. A deploy was also pushed at 14:18 (payments-api v2.4.1).\n\nRecommend checking if the deploy introduced an N+1 query or blocking operation.',
+    'Show me correlated metrics for this spike':
+      'Correlating <span class="msg-highlight">system.cpu.usage</span> at the 14:22 spike window...\n\n• <span class="msg-highlight">http.request.count{service:payments}</span> — r=0.92 ↑\n• <span class="msg-highlight">db.query.duration</span> — r=0.88 ↑\n• <span class="msg-highlight">k8s.pod.restart_count</span> — r=0.74 ↑\n\nShall I overlay any of these on the chart?',
+    'Create a monitor for CPU usage above 80% in prod':
+      'Monitor drafted:\n\n<strong>Condition:</strong> <span class="msg-highlight">avg:system.cpu.usage{env:prod} by {service} > 80</span> for 5m\n<strong>Severity:</strong> Warning at 70%, Alert at 80%\n<strong>Notify:</strong> #platform-alerts\n\nShall I save this monitor?',
+  };
+
+  function now() {
+    return new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  }
+
+  function sendCmdiMessage(text) {
+    openCmdi();
+    document.getElementById('cmdiTextarea').value = text;
+    submitCmdi();
+  }
+
+  function submitCmdi() {
+    const ta = document.getElementById('cmdiTextarea');
+    const text = ta.value.trim();
+    if (!text) return;
+    ta.value = '';
+
+    // On first message: hide suggestion cards, show messages + follow-ups
+    const sugsWrap = document.getElementById('cmdiSugsWrap');
+    const msgs = document.getElementById('cmdiMessages');
+    const followups = document.getElementById('cmdiFollowups');
+    if (sugsWrap && sugsWrap.style.display !== 'none') {
+      sugsWrap.style.display = 'none';
+      if (msgs) msgs.style.display = '';
+      if (followups) followups.style.display = '';
+    }
+
+    const userMsg = document.getElementById('userMsg');
+    document.getElementById('userMsgText').textContent = text;
+    document.getElementById('userMsgTs').textContent = now();
+    userMsg.style.display = '';
+
+    const typing = document.getElementById('typingMsg');
+    typing.style.display = '';
+    scrollMessages();
+
+    const response = findResponse(text);
+    setTimeout(() => {
+      typing.style.display = 'none';
+      const resp = document.getElementById('responseMsg');
+      document.getElementById('responseMsgText').innerHTML = response;
+      document.getElementById('responseMsgTs').textContent = now();
+      resp.style.display = '';
+      scrollMessages();
+    }, 1400);
+  }
+
+  function findResponse(text) {
+    for (const [key, val] of Object.entries(AI_RESPONSES)) {
+      if (text.toLowerCase().includes(key.toLowerCase().substring(0, 20))) return val;
+    }
+    return `Analyzing <span class="msg-highlight">${document.getElementById('qrMetric').textContent}</span> in the context of your question...\n\nI found relevant data. The metric shows a pattern consistent with your query. Want me to surface the top 3 correlating metrics or generate a monitor?`;
+  }
+
+  function handleCmdiKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitCmdi(); }
+  }
+
+  function scrollMessages() {
+    const el = document.getElementById('cmdiMessages');
+    el.scrollTop = el.scrollHeight;
+  }
+
+  document.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'i') { e.preventDefault(); toggleCmdi(); }
+  });
+</script>
+</body>
+</html>
