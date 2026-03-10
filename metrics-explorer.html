@@ -461,7 +461,7 @@
     <a class="nav-tab" href="index.html">Overview</a>
     <a class="nav-tab active">Explorer</a>
     <a class="nav-tab" href="metric-summary.html">Summary</a>
-    <a class="nav-tab">Volume</a>
+    <a class="nav-tab" href="volume.html">Volume</a>
     <a class="nav-tab has-preview">
       <span class="preview-badge">Preview</span>
       Generate Metrics
@@ -787,7 +787,11 @@
       window.location.href = 'metrics-explorer.html?q=' + encodeURIComponent(q);
       return;
     }
-    if (/\b(unused|spike|cost|optim|quota|expensive|governance|cardinality|budget)\b/.test(ql)) {
+    if (/\b(unused|expensive|unqueried|volume|waste|quota|cost)\b/.test(ql)) {
+      window.location.href = 'volume.html?q=' + encodeURIComponent(q);
+      return;
+    }
+    if (/\b(spike|optim|governance|cardinality|budget)\b/.test(ql)) {
       window.location.href = 'governance.html?q=' + encodeURIComponent(q);
       return;
     }

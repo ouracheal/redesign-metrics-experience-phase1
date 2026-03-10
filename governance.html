@@ -378,7 +378,11 @@
       window.location.href = 'metrics-explorer.html?q=' + encodeURIComponent(q);
       return;
     }
-    if (/\b(unused|spike|cost|optim|quota|expensive|governance|cardinality|budget)\b/.test(ql)) {
+    if (/\b(unused|expensive|unqueried|volume|waste|quota|cost)\b/.test(ql)) {
+      window.location.href = 'volume.html?q=' + encodeURIComponent(q);
+      return;
+    }
+    if (/\b(spike|optim|governance|cardinality|budget)\b/.test(ql)) {
       window.location.href = 'governance.html?q=' + encodeURIComponent(q);
       return;
     }

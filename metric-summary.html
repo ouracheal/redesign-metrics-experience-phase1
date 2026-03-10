@@ -107,7 +107,6 @@
     }
     .ai-bar-btn:hover { background: #6d28d9; }
     .ai-bar-hint { font-size: 11px; color: #9ca3af; white-space: nowrap; }
-
     /* ── Search bar row ── */
     .searchbar-row {
       display: flex;
@@ -370,7 +369,7 @@
     <a class="nav-tab" href="index.html">Overview</a>
     <a class="nav-tab" href="metrics-explorer.html">Explorer</a>
     <a class="nav-tab active">Summary</a>
-    <a class="nav-tab">Volume</a>
+    <a class="nav-tab" href="volume.html">Volume</a>
     <a class="nav-tab has-preview">
       <span class="preview-badge">Preview</span>
       Generate Metrics
@@ -396,22 +395,6 @@
     <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
     Ask AI
   </button>
-
-</div>
-
-<!-- Search bar row -->
-<div class="searchbar-row">
-  <div class="search-pill" style="max-width:580px;">
-    <span class="search-pill-tab">Metric</span>
-    <span class="search-pill-icon">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    </span>
-    <input id="metricSearch" type="text" placeholder="Search metrics" />
-  </div>
-  <div class="search-pill" style="flex:1;">
-    <span class="search-pill-tab">Tag</span>
-    <input type="text" placeholder="Filter by Tag Value" />
-  </div>
 </div>
 
 <!-- Main -->
@@ -480,12 +463,6 @@
   <!-- Content -->
   <div class="content">
 
-    <!-- NL context banner -->
-    <div class="nl-banner" id="nlBanner">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="color:#7c3aed;flex-shrink:0"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
-      Showing metrics related to <strong id="nlQuery">platform health metrics</strong>
-      <span class="nl-banner-dismiss" onclick="document.getElementById('nlBanner').style.display='none'">✕</span>
-    </div>
 
     <!-- Controls bar -->
     <div class="controls-bar">
@@ -709,7 +686,11 @@
       window.location.href = 'metrics-explorer.html?q=' + encodeURIComponent(q);
       return;
     }
-    if (/\b(unused|spike|cost|optim|quota|expensive|governance|cardinality|budget)\b/.test(ql)) {
+    if (/\b(unused|expensive|unqueried|volume|waste|quota|cost)\b/.test(ql)) {
+      window.location.href = 'volume.html?q=' + encodeURIComponent(q);
+      return;
+    }
+    if (/\b(spike|optim|governance|cardinality|budget)\b/.test(ql)) {
       window.location.href = 'governance.html?q=' + encodeURIComponent(q);
       return;
     }

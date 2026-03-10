@@ -376,6 +376,16 @@
         </div>
       </div>
 
+      <div class="use-case-chip" onclick="fillSearch('most expensive metrics that are unused')">
+        <div class="use-case-icon" style="background:rgba(239,68,68,0.08);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </div>
+        <div class="use-case-body">
+          <div class="use-case-query">Show me unused metrics</div>
+          <div class="use-case-footer">→ <span class="use-case-dest-badge">Governance</span></div>
+        </div>
+      </div>
+
     </div>
 
     <!-- Governance workflows -->
@@ -430,7 +440,11 @@
       window.location.href = 'metrics-explorer.html?q=' + encodeURIComponent(q);
       return;
     }
-    if (/\b(unused|spike|cost|optim|quota|expensive|governance|cardinality|budget)\b/.test(ql)) {
+    if (/\b(unused|expensive|unqueried|volume|waste|quota|cost)\b/.test(ql)) {
+      window.location.href = 'volume.html?q=' + encodeURIComponent(q) + '&unqueried=30&unused_on_assets=true';
+      return;
+    }
+    if (/\b(spike|optim|governance|cardinality|budget)\b/.test(ql)) {
       window.location.href = 'governance.html?q=' + encodeURIComponent(q);
       return;
     }

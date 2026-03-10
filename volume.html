@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metrics – Volume Management</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #fff; color: #1a1a2e;
+      height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+      font-size: 13px;
+    }
+
+    /* ── Top nav ── */
+    .topnav {
+      display: flex; align-items: center;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0 20px; height: 46px; flex-shrink: 0;
+      background: #fff; gap: 0;
+    }
+    .topnav-logo {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 600; color: #111827;
+      margin-right: 24px; white-space: nowrap;
+    }
+    .topnav-logo svg { color: #7c3aed; }
+    .nav-tabs { display: flex; align-items: center; gap: 0; flex: 1; }
+    .nav-tab {
+      padding: 0 14px; height: 46px;
+      display: flex; align-items: center;
+      font-size: 13px; color: #6b7280;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -1px; white-space: nowrap;
+      transition: color 0.15s; text-decoration: none; position: relative;
+    }
+    .nav-tab:hover { color: #374151; }
+    .nav-tab.active { color: #111827; border-bottom-color: #7c3aed; font-weight: 500; }
+    .nav-tab .preview-badge {
+      position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+      font-size: 9px; font-weight: 700; color: #7c3aed; letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .nav-tab.has-preview { padding-top: 14px; }
+    .topnav-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+    .btn-configure {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border: 1px solid #d1d5db; border-radius: 5px;
+      background: #fff; font-size: 12.5px; color: #374151; cursor: pointer;
+      white-space: nowrap;
+    }
+    .time-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 5px;
+      background: #fff; font-size: 12.5px; color: #374151; cursor: pointer;
+    }
+    .time-btn .time-label { font-weight: 600; color: #111827; }
+    .time-note { font-size: 10px; color: #9ca3af; text-align: right; line-height: 1.2; }
+
+    /* ── AI bar ── */
+    .ai-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 20px;
+      background: #faf9ff;
+      border-bottom: 1px solid rgba(124,58,237,0.14);
+      flex-shrink: 0;
+    }
+    .ai-bar-icon { color: #7c3aed; flex-shrink: 0; }
+    .ai-bar-input-wrap {
+      flex: 1; display: flex; align-items: center;
+      background: #fff;
+      border: 1.5px solid rgba(124,58,237,0.22);
+      border-radius: 8px;
+      padding: 5px 12px; gap: 8px;
+      max-width: 620px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .ai-bar-input-wrap:focus-within {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 2px rgba(124,58,237,0.1);
+    }
+    .ai-bar-input {
+      flex: 1; border: none; outline: none;
+      font-size: 13px; color: #111827; background: transparent;
+    }
+    .ai-bar-input::placeholder { color: #9ca3af; }
+    .ai-bar-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: #7c3aed; color: #fff; border: none;
+      border-radius: 6px; padding: 5px 14px;
+      font-size: 12.5px; font-weight: 600; cursor: pointer;
+      flex-shrink: 0; transition: background 0.15s;
+    }
+    .ai-bar-btn:hover { background: #6d28d9; }
+    .ai-bar-hint { font-size: 11px; color: #9ca3af; white-space: nowrap; }
+
+    /* ── NL context banner ── */
+    .nl-banner {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 20px; background: #faf9ff; border-bottom: 1px solid rgba(124,58,237,0.12);
+      flex-shrink: 0; font-size: 12.5px; color: #374151;
+    }
+    .nl-banner strong { color: #7c3aed; }
+    .nl-banner-dismiss { margin-left: auto; color: #9ca3af; cursor: pointer; font-size: 14px; }
+    .nl-banner-dismiss:hover { color: #374151; }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px; border-bottom: 1px solid #e5e7eb; flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .filter-label { font-size: 12px; color: #6b7280; white-space: nowrap; }
+    .filter-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #f3f0ff; border: 1px solid #c4b5fd;
+      border-radius: 6px; padding: 4px 10px;
+      font-size: 12px; color: #7c3aed; font-weight: 500;
+      cursor: pointer; white-space: nowrap;
+    }
+    .filter-chip .chip-x {
+      color: #a78bfa; font-size: 13px; line-height: 1; cursor: pointer;
+    }
+    .filter-chip .chip-x:hover { color: #7c3aed; }
+    .filter-chip-add {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #fff; border: 1px dashed #d1d5db;
+      border-radius: 6px; padding: 4px 10px;
+      font-size: 12px; color: #9ca3af; cursor: pointer;
+    }
+    .filter-chip-add:hover { border-color: #7c3aed; color: #7c3aed; }
+    .filter-sep { flex: 1; }
+    .filter-count {
+      font-size: 12px; color: #6b7280;
+    }
+    .filter-count strong { color: #111827; }
+
+    /* ── Main layout ── */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Table panel ── */
+    .table-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .table-toolbar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px; border-bottom: 1px solid #f3f4f6; flex-shrink: 0;
+    }
+    .toolbar-btn {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border: 1px solid #d1d5db; border-radius: 5px;
+      background: #fff; font-size: 12.5px; color: #374151; cursor: pointer;
+    }
+    .toolbar-btn:hover { background: #f9fafb; }
+    .toolbar-sort-label { font-size: 12px; color: #6b7280; margin-left: auto; }
+
+    .table-wrap { flex: 1; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { position: sticky; top: 0; z-index: 2; background: #fff; }
+    thead tr { border-bottom: 1px solid #e5e7eb; }
+    th {
+      padding: 9px 16px; text-align: left;
+      font-size: 11px; font-weight: 600; color: #6b7280;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      white-space: nowrap; cursor: pointer; user-select: none;
+    }
+    th:hover { color: #374151; }
+    th.sorted { color: #374151; }
+    td { padding: 9px 16px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+    tr:hover td { background: #fafafa; }
+    tr.selected td { background: #faf9ff; }
+    tr:last-child td { border-bottom: none; }
+
+    .metric-name { font-size: 13px; font-family: "SF Mono", "Fira Code", monospace; color: #111827; cursor: pointer; }
+    .metric-name:hover { color: #7c3aed; }
+    .metric-type { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; background: #f3f4f6; color: #6b7280; }
+    .cost-value { font-size: 13px; font-weight: 600; color: #111827; }
+    .cost-bar-wrap { display: flex; align-items: center; gap: 8px; }
+    .cost-bar { height: 4px; border-radius: 2px; background: #e5e7eb; flex: 1; max-width: 80px; overflow: hidden; }
+    .cost-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+    .last-queried { font-size: 12.5px; color: #6b7280; }
+    .last-queried.never { color: #ef4444; font-weight: 500; }
+    .in-use-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 600; border-radius: 4px; padding: 2px 7px;
+    }
+    .in-use-badge.no { background: #fef2f2; color: #dc2626; }
+    .in-use-badge.yes { background: #f0fdf4; color: #16a34a; }
+    .vol-value { font-size: 13px; color: #374151; }
+    .vol-value em { font-style: normal; font-size: 11px; color: #9ca3af; }
+    .row-checkbox { cursor: pointer; accent-color: #7c3aed; }
+
+    /* ── Agentic panel (right side) ── */
+    .agent-panel {
+      width: 280px; flex-shrink: 0;
+      border-left: 1px solid #e5e7eb;
+      background: #faf9ff;
+      display: flex; flex-direction: column;
+      overflow-y: auto;
+    }
+    .agent-panel-head {
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid rgba(124,58,237,0.12);
+    }
+    .agent-panel-eyebrow {
+      font-size: 10px; font-weight: 700; color: #7c3aed;
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .agent-panel-eyebrow-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #7c3aed;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+    .agent-panel-title { font-size: 13.5px; font-weight: 700; color: #111827; margin-bottom: 4px; }
+    .agent-panel-sub { font-size: 12px; color: #6b7280; line-height: 1.4; }
+
+    .agent-summary {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(124,58,237,0.1);
+    }
+    .agent-summary-stat {
+      display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px;
+    }
+    .agent-summary-num { font-size: 22px; font-weight: 800; color: #dc2626; letter-spacing: -0.5px; }
+    .agent-summary-label { font-size: 12px; color: #6b7280; }
+    .agent-summary-row {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; color: #6b7280; margin-bottom: 4px;
+    }
+    .agent-summary-row strong { color: #111827; }
+
+    .agent-workflows { padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; }
+    .agent-workflows-label {
+      font-size: 10px; font-weight: 700; color: #9ca3af;
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;
+    }
+    .agent-workflow-card {
+      display: flex; flex-direction: column; gap: 8px;
+      background: #fff;
+      border: 1px solid rgba(124,58,237,0.2);
+      border-radius: 10px;
+      padding: 12px 14px;
+      cursor: pointer; transition: all 0.15s;
+      text-decoration: none;
+    }
+    .agent-workflow-card:hover {
+      border-color: #7c3aed;
+      box-shadow: 0 3px 12px rgba(124,58,237,0.12);
+      transform: translateY(-1px);
+    }
+    .agent-wf-top { display: flex; align-items: center; justify-content: space-between; }
+    .agent-wf-icon {
+      width: 26px; height: 26px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .agent-agentic-badge {
+      font-size: 9px; font-weight: 700; color: #059669;
+      background: rgba(5,150,105,0.08);
+      border: 1px solid rgba(5,150,105,0.2);
+      border-radius: 20px; padding: 2px 7px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .agent-wf-title { font-size: 12.5px; font-weight: 700; color: #111827; line-height: 1.35; }
+    .agent-wf-desc { font-size: 11.5px; color: #6b7280; line-height: 1.4; }
+    .agent-wf-cta {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 11.5px; font-weight: 600; color: #7c3aed;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Top nav -->
+<div class="topnav">
+  <div class="topnav-logo">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Metrics
+  </div>
+  <div class="nav-tabs">
+    <a class="nav-tab" href="index.html">Overview</a>
+    <a class="nav-tab" href="metrics-explorer.html">Explorer</a>
+    <a class="nav-tab" href="metric-summary.html">Summary</a>
+    <a class="nav-tab active">Volume</a>
+    <a class="nav-tab has-preview">
+      <span class="preview-badge">Preview</span>
+      Generate Metrics
+    </a>
+  </div>
+  <div class="topnav-right">
+    <div style="text-align:right;"><div class="time-note">UTC-04:00</div></div>
+    <button class="btn-configure">Configure Metrics ▾</button>
+    <button class="time-btn"><span class="time-label">30d</span></button>
+    <button class="time-btn">Past 30 Days ▾</button>
+  </div>
+</div>
+
+<!-- AI bar -->
+<div class="ai-bar">
+  <svg class="ai-bar-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+  <div class="ai-bar-input-wrap">
+    <input class="ai-bar-input" id="aiBarInput" type="text" placeholder="Ask anything about your metrics…" />
+  </div>
+  <button class="ai-bar-btn" onclick="aiBarSearch()">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+    Ask AI
+  </button>
+  <span class="ai-bar-hint">Routes to Explorer, Summary, Volume, or Governance based on intent</span>
+</div>
+
+<!-- NL context banner -->
+<div class="nl-banner" id="nlBanner" style="display:none;">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="color:#7c3aed;flex-shrink:0;"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+  Showing results for: <strong id="nlBannerQuery"></strong> — filters applied automatically
+  <span class="nl-banner-dismiss" onclick="document.getElementById('nlBanner').style.display='none'">✕</span>
+</div>
+
+<!-- Filter bar -->
+<div class="filter-bar">
+  <span class="filter-label">Filters:</span>
+  <span class="filter-chip">
+    Unqueried in 30 days
+    <span class="chip-x">×</span>
+  </span>
+  <span class="filter-chip">
+    Not used on assets
+    <span class="chip-x">×</span>
+  </span>
+  <span class="filter-chip-add">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add filter
+  </span>
+  <span class="filter-sep"></span>
+  <span class="filter-count"><strong>18</strong> metrics match</span>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Table -->
+  <div class="table-panel">
+    <div class="table-toolbar">
+      <input type="checkbox" id="selectAll" class="row-checkbox" onchange="toggleAll(this)" />
+      <span style="font-size:12px;color:#6b7280;" id="selectedCount">0 selected</span>
+      <button class="toolbar-btn" id="actionBtn" style="display:none;" onclick="runWorkflow()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+        Run optimization workflow
+      </button>
+      <span class="toolbar-sort-label">Sorted by estimated cost ↓</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:28px;"></th>
+            <th class="sorted">Metric Name ↓</th>
+            <th>Type</th>
+            <th class="sorted">Est. Cost / mo ↓</th>
+            <th>Indexed Volume</th>
+            <th>Last Queried</th>
+            <th>On Assets</th>
+          </tr>
+        </thead>
+        <tbody id="metricsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Agentic panel -->
+  <div class="agent-panel">
+    <div class="agent-panel-head">
+      <div class="agent-panel-eyebrow">
+        <div class="agent-panel-eyebrow-dot"></div>
+        AI Analysis
+      </div>
+      <div class="agent-panel-title">Optimization opportunity found</div>
+      <div class="agent-panel-sub">These metrics are costing money but providing no observable value.</div>
+    </div>
+
+    <div class="agent-summary">
+      <div class="agent-summary-stat">
+        <span class="agent-summary-num">$2,340</span>
+        <span class="agent-summary-label">est. monthly waste</span>
+      </div>
+      <div class="agent-summary-row">
+        <span>Unused metrics</span>
+        <strong>18</strong>
+      </div>
+      <div class="agent-summary-row">
+        <span>Avg. days since last query</span>
+        <strong>67 days</strong>
+      </div>
+      <div class="agent-summary-row">
+        <span>Not on any dashboard/monitor</span>
+        <strong>18 / 18</strong>
+      </div>
+    </div>
+
+    <div class="agent-workflows">
+      <div class="agent-workflows-label">Agentic workflows</div>
+
+      <div class="agent-workflow-card" onclick="window.location.href='governance.html?mode=optimize&q=unused+custom+metrics'">
+        <div class="agent-wf-top">
+          <div class="agent-wf-icon" style="background:rgba(124,58,237,0.08);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <span class="agent-agentic-badge">Agentic</span>
+        </div>
+        <div class="agent-wf-title">Metric Optimization Planning</div>
+        <div class="agent-wf-desc">Analyzes usage, proposes a plan with simulated cost &amp; scope impact, then routes for review before any enforcement.</div>
+        <div class="agent-wf-cta">
+          Start workflow
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+      </div>
+
+      <div class="agent-workflow-card" onclick="window.location.href='governance.html?q=usage+spike+detected'">
+        <div class="agent-wf-top">
+          <div class="agent-wf-icon" style="background:rgba(245,158,11,0.1);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <span class="agent-agentic-badge">Agentic</span>
+        </div>
+        <div class="agent-wf-title">Spike Detection</div>
+        <div class="agent-wf-desc">Investigate a sudden volume spike — identify root cause and take guided action.</div>
+        <div class="agent-wf-cta">
+          Start workflow
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+  // ── AI Bar ──
+  function aiBarSearch() {
+    const q = document.getElementById('aiBarInput').value.trim();
+    if (!q) return;
+    const ql = q.toLowerCase();
+    if (/\b(last \d+|broken down|by (service|env|region|host|az)|p99|p95|avg|sum|rate|over time|usage in prod|cpu|latency|error rate|throughput)\b/.test(ql)) {
+      window.location.href = 'metrics-explorer.html?q=' + encodeURIComponent(q);
+      return;
+    }
+    if (/\b(spike|governance|cardinality|budget)\b/.test(ql)) {
+      window.location.href = 'governance.html?q=' + encodeURIComponent(q);
+      return;
+    }
+    if (/\b(unused|expensive|cost|optim|quota|unqueried|volume|waste)\b/.test(ql)) {
+      window.location.href = 'volume.html?q=' + encodeURIComponent(q);
+      return;
+    }
+    window.location.href = 'metric-summary.html?q=' + encodeURIComponent(q);
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    const aiInput = document.getElementById('aiBarInput');
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('q');
+    if (q) {
+      aiInput.value = q;
+      document.getElementById('nlBanner').style.display = 'flex';
+      document.getElementById('nlBannerQuery').textContent = q;
+    }
+    aiInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') aiBarSearch(); });
+  });
+
+  // ── Metrics data ──
+  const UNUSED_METRICS = [
+    { name: 'custom.payments.retry_count',          type: 'COUNT', volume: '48.2M', cost: 312, lastQueried: 'Never',   onAssets: false },
+    { name: 'custom.checkout.session_depth',        type: 'GAUGE', volume: '41.7M', cost: 271, lastQueried: 'Never',   onAssets: false },
+    { name: 'custom.api.request_body_size',         type: 'DIST',  volume: '38.9M', cost: 253, lastQueried: '94 days', onAssets: false },
+    { name: 'custom.infra.disk_read_latency_p50',   type: 'GAUGE', volume: '35.1M', cost: 228, lastQueried: '83 days', onAssets: false },
+    { name: 'custom.db.connection_wait_ms',         type: 'DIST',  volume: '33.4M', cost: 217, lastQueried: 'Never',   onAssets: false },
+    { name: 'custom.frontend.render_time_p75',      type: 'DIST',  volume: '29.8M', cost: 194, lastQueried: '71 days', onAssets: false },
+    { name: 'custom.worker.queue_depth_secondary',  type: 'GAUGE', volume: '27.5M', cost: 179, lastQueried: 'Never',   onAssets: false },
+    { name: 'custom.cache.miss_rate_regional',      type: 'RATE',  volume: '24.2M', cost: 157, lastQueried: '66 days', onAssets: false },
+    { name: 'custom.payments.auth_latency_p50',     type: 'DIST',  volume: '22.1M', cost: 144, lastQueried: 'Never',   onAssets: false },
+    { name: 'custom.infra.swap_used_bytes',         type: 'GAUGE', volume: '20.8M', cost: 135, lastQueried: '58 days', onAssets: false },
+    { name: 'custom.api.upstream_connect_time',     type: 'DIST',  volume: '19.3M', cost: 125, lastQueried: 'Never',   onAssets: false },
+    { name: 'custom.checkout.promo_applied_count',  type: 'COUNT', volume: '17.6M', cost: 114, lastQueried: '52 days', onAssets: false },
+    { name: 'custom.worker.retry_backoff_ms',       type: 'DIST',  volume: '15.9M', cost: 103, lastQueried: 'Never',   onAssets: false },
+    { name: 'custom.frontend.js_error_count',       type: 'COUNT', volume: '14.4M', cost: 94,  lastQueried: '44 days', onAssets: false },
+    { name: 'custom.db.slow_query_count_secondary', type: 'COUNT', volume: '13.1M', cost: 85,  lastQueried: 'Never',   onAssets: false },
+    { name: 'custom.cache.eviction_rate',           type: 'RATE',  volume: '11.8M', cost: 77,  lastQueried: '38 days', onAssets: false },
+    { name: 'custom.infra.net_recv_errors',         type: 'COUNT', volume: '10.5M', cost: 68,  lastQueried: 'Never',   onAssets: false },
+    { name: 'custom.api.timeout_retries',           type: 'COUNT', volume:  '9.3M', cost: 60,  lastQueried: '31 days', onAssets: false },
+  ];
+
+  const maxCost = Math.max(...UNUSED_METRICS.map(m => m.cost));
+  const typeColors = { COUNT: '#6b7280', GAUGE: '#2563eb', DIST: '#7c3aed', RATE: '#059669' };
+
+  function renderTable() {
+    const tbody = document.getElementById('metricsBody');
+    tbody.innerHTML = '';
+    UNUSED_METRICS.forEach((m, i) => {
+      const pct = Math.round((m.cost / maxCost) * 100);
+      const tr = document.createElement('tr');
+      tr.id = 'row-' + i;
+      tr.innerHTML = `
+        <td><input type="checkbox" class="row-checkbox" data-idx="${i}" onchange="onRowCheck()" /></td>
+        <td><span class="metric-name">${m.name}</span></td>
+        <td><span class="metric-type" style="color:${typeColors[m.type]||'#6b7280'};background:${typeColors[m.type]||'#6b7280'}18;">${m.type}</span></td>
+        <td>
+          <div class="cost-bar-wrap">
+            <span class="cost-value">$${m.cost}</span>
+            <div class="cost-bar"><div class="cost-bar-fill" style="width:${pct}%;"></div></div>
+          </div>
+        </td>
+        <td><span class="vol-value">${m.volume} <em>pts/mo</em></span></td>
+        <td><span class="last-queried ${m.lastQueried === 'Never' ? 'never' : ''}">${m.lastQueried}</span></td>
+        <td><span class="in-use-badge ${m.onAssets ? 'yes' : 'no'}">${m.onAssets ? '✓ Yes' : '✗ No'}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function onRowCheck() {
+    const checked = document.querySelectorAll('input[type=checkbox][data-idx]:checked');
+    const count = checked.length;
+    document.getElementById('selectedCount').textContent = count + ' selected';
+    document.getElementById('actionBtn').style.display = count > 0 ? 'flex' : 'none';
+    checked.forEach(cb => document.getElementById('row-' + cb.dataset.idx).classList.add('selected'));
+    document.querySelectorAll('input[type=checkbox][data-idx]:not(:checked)').forEach(cb => {
+      document.getElementById('row-' + cb.dataset.idx).classList.remove('selected');
+    });
+  }
+
+  function toggleAll(cb) {
+    document.querySelectorAll('input[type=checkbox][data-idx]').forEach(c => { c.checked = cb.checked; });
+    onRowCheck();
+  }
+
+  function runWorkflow() {
+    window.location.href = 'governance.html?mode=optimize&q=unused+custom+metrics';
+  }
+
+  renderTable();
+</script>
+</body>
+</html>
