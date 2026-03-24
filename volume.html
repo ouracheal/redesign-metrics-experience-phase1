@@ -252,12 +252,6 @@
   </button>
 </div>
 
-<!-- NL banner -->
-<div class="nl-banner" id="nlBanner">
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="color:#7c3aed;flex-shrink:0;"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
-  Showing results for: <strong id="nlBannerQuery"></strong> — filters applied automatically
-  <span class="nl-banner-dismiss" onclick="document.getElementById('nlBanner').classList.remove('show')">✕</span>
-</div>
 
 <!-- Volume Overview -->
 <div class="vol-overview" id="volOverview">
@@ -481,8 +475,6 @@
     const q = params.get('q');
     if (q) {
       document.getElementById('aiBarInput').value = q;
-      document.getElementById('nlBannerQuery').textContent = q;
-      document.getElementById('nlBanner').classList.add('show');
     }
     document.getElementById('aiBarInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') aiBarSearch(); });
   });
